@@ -2162,11 +2162,36 @@
     var input = document.getElementById('odoInput');
     var val = parseInt(input.value, 10);
     if (!val || val <= 0) return;
-    document.getElementById('odoDisplay').textContent = val.toLocaleString();
-    var today = new Date();
-    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
-    document.getElementById('odoAsOf').textContent = 'km · as of ' + today.toLocaleDateString('en-US', opts);
-    input.value = '';
+
+    var btn = input.nextElementSibling;
+    var originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    var todayStr = new Date().toISOString().slice(0, 10);
+
+    apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'CurrentOdometer', value: val })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.error || 'unknown error');
+        return apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'OdometerAsOf', value: todayStr });
+      })
+      .then(function (res) {
+        if (res.ok) {
+          showToast('Odometer saved to the Sheet');
+          input.value = '';
+          boot();
+        } else {
+          showToast('Could not save odometer: ' + (res.error || 'unknown error'));
+        }
+      })
+      .catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend — odometer was not saved');
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      });
   }
 
   var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>';
