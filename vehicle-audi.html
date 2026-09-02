@@ -1148,29 +1148,7 @@
     </div>
 
     <div id="tireSetsOn">
-      <div class="tire-set-grid">
-        <div class="tire-set-card">
-          <div class="tire-set-head">
-            <span class="tire-set-name">Winter Set</span>
-            <span class="tire-set-badge on-car">On car</span>
-          </div>
-          <div class="tire-set-stat"><span class="label">Last mounted</span><span class="value">Oct 22, 2023 &middot; 109,500 km</span></div>
-          <div class="tire-set-stat"><span class="label">km on this stint</span><span class="value">36,553 km</span></div>
-          <div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~43,053 km</span></div>
-          <div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>
-          <div class="tire-set-caveat">No swap logged since Oct 2023 — confirm this set has really been on continuously, or entries are missing.</div>
-        </div>
-        <div class="tire-set-card">
-          <div class="tire-set-head">
-            <span class="tire-set-name">Summer Set</span>
-            <span class="tire-set-badge stored">In storage</span>
-          </div>
-          <div class="tire-set-stat"><span class="label">Last dismounted</span><span class="value">Oct 22, 2023 &middot; 109,500 km</span></div>
-          <div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~22,384 km</span></div>
-          <div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>
-          <div class="tire-set-caveat">One 2019 swap row has an odometer lower than an earlier entry — excluded from this total pending your confirmation.</div>
-        </div>
-      </div>
+      <div class="tire-set-grid" id="tireSetGrid"></div>
       <button class="section-add-btn" style="margin-top:12px;" onclick="openTireSwapForm()">+ Log tire swap</button>
     </div>
 
@@ -1442,11 +1420,11 @@
       </div>
       <div class="form-field">
         <label>Notes</label>
-        <textarea placeholder="optional"></textarea>
+        <textarea id="partNotes" placeholder="optional"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('partSheet')">Cancel</button>
-        <button type="submit" class="btn-save">Save part</button>
+        <button type="submit" class="btn-save" id="partSaveBtn">Save part</button>
       </div>
     </form>
   </div>
@@ -1455,38 +1433,38 @@
 <!-- TIRE SWAP entry sheet -->
 <div class="sheet-backdrop" id="tireSheet" onclick="if(event.target===this)closeSheet('tireSheet')">
   <div class="sheet">
-    <form onsubmit="event.preventDefault(); closeSheet('tireSheet');">
+    <form id="tireSwapForm" onsubmit="submitTireSwapForm(event)">
       <h3 class="sheet-title">Log a tire swap</h3>
-      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+      <p class="sheet-sub">Saves as a Tire Swap entry in the Sheet's Service Log.</p>
 
       <div class="form-row">
         <div class="form-field">
           <label>Date</label>
-          <input type="date">
+          <input type="date" id="tireSwapDate">
         </div>
         <div class="form-field">
           <label>Odometer (km)</label>
-          <input type="number" placeholder="e.g. 150000">
+          <input type="number" id="tireSwapOdo" placeholder="e.g. 150000">
         </div>
       </div>
       <div class="form-field">
         <label>Set now going on</label>
-        <select>
+        <select id="tireSwapSet">
           <option>Winter Set</option>
           <option>Summer Set</option>
         </select>
       </div>
       <div class="form-field">
         <label>Tread depth of set coming off (mm)</label>
-        <input type="number" step="0.1" placeholder="optional">
+        <input type="number" step="0.1" id="tireSwapTread" placeholder="optional">
       </div>
       <div class="form-field">
         <label>Notes</label>
-        <textarea placeholder="optional"></textarea>
+        <textarea id="tireSwapNotes" placeholder="optional"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('tireSheet')">Cancel</button>
-        <button type="submit" class="btn-save">Save swap</button>
+        <button type="submit" class="btn-save" id="tireSwapSaveBtn">Save swap</button>
       </div>
     </form>
   </div>
@@ -1546,7 +1524,7 @@
   <div class="sheet">
     <form onsubmit="submitOwnershipForm(event)">
       <h3 class="sheet-title">Purchase info</h3>
-      <p class="sheet-sub">Used to compute total invested and cost-per-year-owned. Preview form — not yet wired to a backend.</p>
+      <p class="sheet-sub">Used to compute total invested and cost-per-year-owned. Saves to the Sheet's Settings tab.</p>
       <div class="form-row">
         <div class="form-field">
           <label>Purchase price ($)</label>
@@ -1570,7 +1548,7 @@
   <div class="sheet">
     <form onsubmit="submitSgiForm(event)">
       <h3 class="sheet-title">Registration &amp; plates</h3>
-      <p class="sheet-sub">SGI plates — annual paid in full, or monthly pre-authorized debit. Preview form — not yet wired to a backend.</p>
+      <p class="sheet-sub">SGI plates — annual paid in full, or monthly pre-authorized debit. Saves to the Sheet's Settings tab.</p>
       <div class="form-field">
         <label>Payment type</label>
         <div class="status-toggle">
@@ -1859,7 +1837,11 @@
 
   function renderScheduleList(data) {
     var currentOdometer = Number(data.settings.CurrentOdometer) || 0;
-    var statuses = computeScheduleStatus(data.serviceLog, data.serviceSchedule, currentOdometer);
+    var customAsSchedule = (data.customTasks || []).map(function (t) {
+      return { ServiceItem: t.TaskName, IntervalKm: t.IntervalKm, IntervalMonths: t.IntervalMonths, FirstService: '', Group: t.Group || 'Custom', Notes: t.Notes };
+    });
+    var schedule = data.serviceSchedule.concat(customAsSchedule);
+    var statuses = computeScheduleStatus(data.serviceLog, schedule, currentOdometer);
 
     var rank = { overdue: 0, soon: 1, ok: 2, none: 3 };
     statuses.sort(function (a, b) {
@@ -1978,12 +1960,22 @@
 
   function renderAll(data) {
     STATE = data;
+    data.customTasks = data.customTasks || [];
+    data.fuelLog = data.fuelLog || [];
+    data.partsStorage = data.partsStorage || [];
+
     renderOdometer(data.settings);
     renderQuickStats(data);
     renderScheduleList(data);
     renderSeasonalList(data.serviceLog);
     renderModList(data.modifications);
     renderActivityList(data.serviceLog);
+    renderOwnership(data.settings);
+    renderSgi(data.settings);
+    renderTireSets(data);
+    renderPartsStorage(data.partsStorage);
+    renderFuelLog(data.fuelLog);
+    renderCustomTasksList(data.customTasks);
     recalcCostTotals();
   }
 
@@ -1998,6 +1990,112 @@
     }).catch(function (err) {
       console.error(err);
       showToast('Could not reach the backend — check your connection');
+    });
+  }
+
+  // Derives "on car" / "in storage" set status and mileage stats purely
+  // from real ServiceLog Tire Swap entries — no separate tab needed.
+  // Undated or ambiguous (not clearly "winter"/"summer") rows are skipped,
+  // and any stint with a decreasing odometer (a known data-quality issue —
+  // see the migration notes) is excluded from cumulative km, same as the
+  // original preview's caveat.
+  function computeTireSets(serviceLog, currentOdometer) {
+    var swaps = serviceLog
+      .filter(function (e) { return e.Category === 'Tire Swap' && e.Date; })
+      .map(function (e) {
+        var desc = (e.Description || '').toLowerCase();
+        var type = desc.indexOf('winter') !== -1 ? 'winter' : (desc.indexOf('summer') !== -1 ? 'summer' : 'unknown');
+        return { date: e.Date, odometer: Number(e.Odometer) || 0, type: type };
+      })
+      .filter(function (s) { return s.type !== 'unknown'; })
+      .sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+
+    if (swaps.length === 0) return null;
+
+    var stats = { winter: { lastMount: null, cumulative: 0 }, summer: { lastMount: null, cumulative: 0 } };
+    swaps.forEach(function (s, i) {
+      stats[s.type].lastMount = s;
+      var nextOdo = (i + 1 < swaps.length) ? swaps[i + 1].odometer : currentOdometer;
+      var stintKm = nextOdo - s.odometer;
+      if (stintKm > 0) stats[s.type].cumulative += stintKm;
+    });
+
+    var onCarType = swaps[swaps.length - 1].type;
+    var storedType = onCarType === 'winter' ? 'summer' : 'winter';
+    return { onCarType: onCarType, storedType: storedType, stats: stats };
+  }
+
+  function tireSetCardHtml(type, stats, currentOdometer, isOnCar) {
+    var label = type === 'winter' ? 'Winter Set' : 'Summer Set';
+    var last = stats.lastMount;
+    var badge = isOnCar ? '<span class="tire-set-badge on-car">On car</span>' : '<span class="tire-set-badge stored">In storage</span>';
+    var lastLabel = isOnCar ? 'Last mounted' : 'Last dismounted';
+    var lastValue = last ? (formatDateLong(last.date) + ' &middot; ' + formatOdometer(last.odometer) + ' km') : 'not recorded';
+    var stintRow = isOnCar && last
+      ? '<div class="tire-set-stat"><span class="label">km on this stint</span><span class="value">' + formatOdometer(currentOdometer - last.odometer) + ' km</span></div>'
+      : '';
+    return '<div class="tire-set-card">' +
+      '<div class="tire-set-head"><span class="tire-set-name">' + label + '</span>' + badge + '</div>' +
+      '<div class="tire-set-stat"><span class="label">' + lastLabel + '</span><span class="value">' + lastValue + '</span></div>' +
+      stintRow +
+      '<div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~' + formatOdometer(stats.cumulative) + ' km</span></div>' +
+      '<div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>' +
+      '</div>';
+  }
+
+  function renderTireSets(data) {
+    var tracking = data.settings.TrackTireSets !== 'false'; // default on if never set
+    document.getElementById('winterRimsToggle').checked = tracking;
+    document.getElementById('tireSetsOn').style.display = tracking ? 'block' : 'none';
+    document.getElementById('tireSetsOff').style.display = tracking ? 'none' : 'flex';
+    if (!tracking) return;
+
+    var currentOdometer = Number(data.settings.CurrentOdometer) || 0;
+    var result = computeTireSets(data.serviceLog, currentOdometer);
+    var grid = document.getElementById('tireSetGrid');
+    if (!result) {
+      grid.innerHTML = '<p class="section-note">No dated Tire Swap entries logged yet — log one below to start tracking.</p>';
+      return;
+    }
+    grid.innerHTML =
+      tireSetCardHtml(result.onCarType, result.stats[result.onCarType], currentOdometer, true) +
+      tireSetCardHtml(result.storedType, result.stats[result.storedType], currentOdometer, false);
+  }
+
+  function submitTireSwapForm(e) {
+    e.preventDefault();
+    var date = document.getElementById('tireSwapDate').value;
+    var odo = document.getElementById('tireSwapOdo').value;
+    var setName = document.getElementById('tireSwapSet').value; // "Winter Set" | "Summer Set"
+    var tread = document.getElementById('tireSwapTread').value;
+    var notes = document.getElementById('tireSwapNotes').value;
+    var fullNotes = (tread ? 'Tread depth of outgoing set: ' + tread + 'mm. ' : '') + (notes || '');
+
+    var saveBtn = document.getElementById('tireSwapSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    apiPost('addServiceLogEntry', {
+      vehicleId: VEHICLE_ID,
+      entry: {
+        date: date, odometer: odo, category: 'Tire Swap',
+        description: setName + ' mounted', notes: fullNotes
+      }
+    }).then(function (res) {
+      if (res.ok) {
+        showToast('Tire swap saved to the Sheet');
+        closeSheet('tireSheet');
+        document.getElementById('tireSwapForm').reset();
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — swap was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save swap';
     });
   }
 
@@ -2029,6 +2127,10 @@
     document.getElementById('modSheet').classList.add('open');
   }
   function openPartForm() {
+    var select = document.getElementById('partRelatedMod');
+    var modOptions = (STATE.modifications || []).map(function (m) { return m.Modification; }).filter(Boolean);
+    select.innerHTML = modOptions.map(function (name) { return '<option>' + name + '</option>'; }).join('') +
+      '<option>Other / not tied to a mod</option>';
     document.getElementById('partSheet').classList.add('open');
   }
   function closeSheet(id) {
@@ -2044,6 +2146,9 @@
     var on = document.getElementById('winterRimsToggle').checked;
     document.getElementById('tireSetsOn').style.display = on ? 'block' : 'none';
     document.getElementById('tireSetsOff').style.display = on ? 'none' : 'flex';
+    apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'TrackTireSets', value: on ? 'true' : 'false' }).catch(function (err) {
+      console.error(err);
+    });
   }
   function toggleMoreSchedule() {
     var list = document.getElementById('moreScheduleList');
@@ -2066,16 +2171,23 @@
 
   var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>';
 
+  var VOID_ACTION_BY_SOURCE = {
+    service: 'voidServiceLogEntry',
+    mod: 'voidModification',
+    fuel: 'voidFuelEntry',
+    part: 'voidPartEntry',
+    task: 'voidCustomTask'
+  };
+
   function deleteRow(btn) {
     var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row');
     if (!row) return;
     var entryId = row.getAttribute('data-entry-id');
-    var source = row.getAttribute('data-source'); // 'service' | 'mod' — present only on real, backend-loaded rows
+    var source = row.getAttribute('data-source'); // present only on real, backend-loaded rows
 
-    if (entryId && source) {
+    if (entryId && source && VOID_ACTION_BY_SOURCE[source]) {
       if (!confirm('Remove this entry? This voids it in the Google Sheet — there\'s no undo from here.')) return;
-      var action = source === 'service' ? 'voidServiceLogEntry' : 'voidModification';
-      apiPost(action, { vehicleId: VEHICLE_ID, entryId: entryId }).then(function (res) {
+      apiPost(VOID_ACTION_BY_SOURCE[source], { vehicleId: VEHICLE_ID, entryId: entryId }).then(function (res) {
         if (res.ok) {
           showToast('Entry removed');
           boot();
@@ -2119,8 +2231,20 @@
     return '<span class="cost-tag none">' + (emptyLabel || 'no cost logged') + '</span>';
   }
 
-  /* ---------- Ownership & Costs (added) ---------- */
+  /* ---------- Ownership & Costs ---------- */
+  // Backed by the Settings tab (PurchasePrice, DateBought) — a blueprint
+  // "vehicle-specific tunable", not a new tab (see HEADERS comment in Code.gs).
   var ownershipData = { purchasePrice: null, dateBought: null };
+
+  function renderOwnership(settings) {
+    ownershipData.purchasePrice = settings.PurchasePrice ? Number(settings.PurchasePrice) : null;
+    ownershipData.dateBought = settings.DateBought || null;
+
+    document.getElementById('purchasePriceDisplay').textContent = ownershipData.purchasePrice ? fmtMoney(ownershipData.purchasePrice) : 'not set';
+    document.getElementById('purchasePriceDisplay').classList.toggle('muted', !ownershipData.purchasePrice);
+    document.getElementById('dateBoughtDisplay').textContent = ownershipData.dateBought ? formatDateShort(ownershipData.dateBought) : 'not set';
+    document.getElementById('dateBoughtDisplay').classList.toggle('muted', !ownershipData.dateBought);
+  }
 
   function openOwnershipForm() {
     document.getElementById('purchasePriceInput').value = ownershipData.purchasePrice || '';
@@ -2132,16 +2256,28 @@
     e.preventDefault();
     var price = document.getElementById('purchasePriceInput').value;
     var date = document.getElementById('dateBoughtInput').value;
-    ownershipData.purchasePrice = price ? Number(price) : null;
-    ownershipData.dateBought = date || null;
+    var saveBtn = e.target.querySelector('.btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-    document.getElementById('purchasePriceDisplay').textContent = ownershipData.purchasePrice ? fmtMoney(ownershipData.purchasePrice) : 'not set';
-    document.getElementById('purchasePriceDisplay').classList.toggle('muted', !ownershipData.purchasePrice);
-    document.getElementById('dateBoughtDisplay').textContent = ownershipData.dateBought ? formatDateShort(ownershipData.dateBought) : 'not set';
-    document.getElementById('dateBoughtDisplay').classList.toggle('muted', !ownershipData.dateBought);
-
-    recalcCostTotals();
-    closeSheet('ownershipSheet');
+    Promise.all([
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'PurchasePrice', value: price || '' }),
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'DateBought', value: date || '' })
+    ]).then(function (results) {
+      if (results.every(function (r) { return r.ok; })) {
+        showToast('Ownership info saved');
+        closeSheet('ownershipSheet');
+        boot();
+      } else {
+        showToast('Could not save ownership info');
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    });
   }
 
   function recalcCostTotals() {
@@ -2181,8 +2317,14 @@
     }
   }
 
-  /* ---------- SGI Registration & Plates (added) ---------- */
+  /* ---------- Registration & Plates (SGI) ---------- */
+  // Also backed by Settings (RegType, RegAmount, RegDate) — see note above.
   var sgiData = null; // { type: 'annual'|'monthly', amount, date }
+
+  function renderSgi(settings) {
+    sgiData = settings.RegType ? { type: settings.RegType, amount: Number(settings.RegAmount) || 0, date: settings.RegDate || '' } : null;
+    renderSgiCard();
+  }
 
   function openSgiForm() {
     if (sgiData) {
@@ -2209,21 +2351,33 @@
   function submitSgiForm(e) {
     e.preventDefault();
     var monthly = document.getElementById('sgiTypeMonthly').checked;
-    if (monthly) {
-      sgiData = {
-        type: 'monthly',
-        amount: Number(document.getElementById('sgiMonthlyAmount').value) || 0,
-        date: document.getElementById('sgiNextDebit').value
-      };
-    } else {
-      sgiData = {
-        type: 'annual',
-        amount: Number(document.getElementById('sgiAnnualAmount').value) || 0,
-        date: document.getElementById('sgiRenewalDate').value
-      };
-    }
-    renderSgiCard();
-    closeSheet('sgiSheet');
+    var type = monthly ? 'monthly' : 'annual';
+    var amount = monthly ? document.getElementById('sgiMonthlyAmount').value : document.getElementById('sgiAnnualAmount').value;
+    var date = monthly ? document.getElementById('sgiNextDebit').value : document.getElementById('sgiRenewalDate').value;
+
+    var saveBtn = e.target.querySelector('.btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    Promise.all([
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegType', value: type }),
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegAmount', value: amount || '' }),
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegDate', value: date || '' })
+    ]).then(function (results) {
+      if (results.every(function (r) { return r.ok; })) {
+        showToast('Registration info saved');
+        closeSheet('sgiSheet');
+        boot();
+      } else {
+        showToast('Could not save registration info');
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    });
   }
 
   function renderSgiCard() {
@@ -2249,45 +2403,72 @@
   }
 
   /* ---------- Fuel & Mileage (added) ---------- */
-  var fuelLog = []; // { date, odo, liters, cost }
-
   function openFuelForm() {
     document.getElementById('fuelSheet').classList.add('open');
+  }
+
+  function fuelRowHtml(entry) {
+    var liters = Number(entry.Liters) || 0;
+    var cost = Number(entry.Cost) || 0;
+    var perL = liters > 0 ? cost / liters : 0;
+    return '<div class="fuel-row" data-cost="' + cost + '" data-liters="' + liters + '" data-date="' + (entry.Date || '') + '" data-entry-id="' + entry.EntryID + '" data-source="fuel">' +
+      '<div><span class="col-label">Date</span><span class="col-value">' + formatDateShort(entry.Date) + '</span></div>' +
+      '<div><span class="col-label">Odometer</span><span class="col-value">' + (entry.Odometer ? formatOdometer(entry.Odometer) + ' km' : '&mdash;') + '</span></div>' +
+      '<div><span class="col-label">Liters</span><span class="col-value">' + (liters ? liters.toLocaleString() + ' L' : '&mdash;') + '</span></div>' +
+      '<div><span class="col-label">Cost</span><span class="col-value">' + fmtMoney(cost) + (perL ? ' &middot; ' + perL.toFixed(2) + '/L' : '') + '</span></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+    '</div>';
+  }
+
+  function renderFuelLog(fuelLog) {
+    var sorted = fuelLog.slice().sort(function (a, b) { return new Date(b.Date || 0) - new Date(a.Date || 0); });
+    var list = document.getElementById('fuelList');
+    var empty = document.getElementById('fuelEmpty');
+    if (sorted.length === 0) {
+      list.style.display = 'none';
+      list.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      list.innerHTML = sorted.map(fuelRowHtml).join('');
+      list.style.display = 'block';
+      empty.style.display = 'none';
+    }
+    recalcFuelStats();
   }
 
   function submitFuelForm(e) {
     e.preventDefault();
     var date = document.getElementById('fuelDate').value;
     var odo = document.getElementById('fuelOdo').value;
-    var liters = Number(document.getElementById('fuelLiters').value) || 0;
-    var cost = Number(document.getElementById('fuelCost').value) || 0;
-    var perL = liters > 0 ? cost / liters : 0;
+    var liters = document.getElementById('fuelLiters').value;
+    var cost = document.getElementById('fuelCost').value;
 
-    fuelLog.push({ date: date, odo: odo, liters: liters, cost: cost });
+    var saveBtn = document.getElementById('fuelSheet').querySelector('.btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-    var row = document.createElement('div');
-    row.className = 'fuel-row';
-    row.setAttribute('data-cost', cost);
-    row.setAttribute('data-liters', liters);
-    row.setAttribute('data-date', date);
-    row.innerHTML =
-      '<div><span class="col-label">Date</span><span class="col-value">' + formatDateShort(date) + '</span></div>' +
-      '<div><span class="col-label">Odometer</span><span class="col-value">' + (odo ? Number(odo).toLocaleString() + ' km' : '—') + '</span></div>' +
-      '<div><span class="col-label">Liters</span><span class="col-value">' + (liters ? liters.toLocaleString() + ' L' : '—') + '</span></div>' +
-      '<div><span class="col-label">Cost</span><span class="col-value">' + fmtMoney(cost) + (perL ? ' &middot; ' + perL.toFixed(2) + '/L' : '') + '</span></div>' +
-      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
-
-    var list = document.getElementById('fuelList');
-    list.insertBefore(row, list.firstChild);
-    list.style.display = 'block';
-    document.getElementById('fuelEmpty').style.display = 'none';
-
-    recalcFuelStats();
-    closeSheet('fuelSheet');
-    document.getElementById('fuelDate').value = '';
-    document.getElementById('fuelOdo').value = '';
-    document.getElementById('fuelLiters').value = '';
-    document.getElementById('fuelCost').value = '';
+    apiPost('addFuelEntry', {
+      vehicleId: VEHICLE_ID,
+      entry: { date: date, odometer: odo, liters: liters, cost: cost }
+    }).then(function (res) {
+      if (res.ok) {
+        showToast('Fill-up saved to the Sheet');
+        closeSheet('fuelSheet');
+        document.getElementById('fuelDate').value = '';
+        document.getElementById('fuelOdo').value = '';
+        document.getElementById('fuelLiters').value = '';
+        document.getElementById('fuelCost').value = '';
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — fill-up was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save fill-up';
+    });
   }
 
   function recalcFuelStats() {
@@ -2451,6 +2632,29 @@
     closeSheet('modSheet');
   }
 
+  function partRowHtml(part) {
+    return '<div class="part-row" data-entry-id="' + part.EntryID + '" data-source="part">' +
+      '<div class="row-lead">' + catChipHtml(part.PartName) + '<div><div class="item-name">' + part.PartName + '</div><div class="item-sub">Removed ' + formatDateShort(part.DateRemoved) + (part.Odometer ? ' &middot; ' + formatOdometer(part.Odometer) + ' km' : '') + ' &middot; ' + (part.RelatedModification || 'not tied to a mod') + '</div></div></div>' +
+      '<div><span class="col-label">Condition</span><span class="col-value">' + (part.Condition || '&mdash;') + '</span></div>' +
+      '<div><span class="col-label">Stored</span><span class="col-value">' + (part.Location || 'not specified') + '</span></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+    '</div>';
+  }
+
+  function renderPartsStorage(partsStorage) {
+    var list = document.getElementById('partsList');
+    var empty = document.getElementById('partsEmpty');
+    if (partsStorage.length === 0) {
+      list.style.display = 'none';
+      list.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      list.innerHTML = partsStorage.map(partRowHtml).join('');
+      list.style.display = 'block';
+      empty.style.display = 'none';
+    }
+  }
+
   function submitPartForm(e) {
     e.preventDefault();
     var name = document.getElementById('partName').value || 'Unnamed part';
@@ -2458,21 +2662,43 @@
     var date = document.getElementById('partDate').value;
     var odo = document.getElementById('partOdo').value;
     var condition = document.getElementById('partCondition').value;
-    var location = document.getElementById('partLocation').value || 'not specified';
+    var location = document.getElementById('partLocation').value;
+    var notes = document.getElementById('partNotes').value;
 
-    var row = document.createElement('div');
-    row.className = 'part-row';
-    row.innerHTML =
-      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">Removed ' + formatDateShort(date) + (odo ? ' · ' + Number(odo).toLocaleString() + ' km' : '') + ' · ' + relatedMod + '</div></div></div>' +
-      '<div><span class="col-label">Condition</span><span class="col-value">' + condition + '</span></div>' +
-      '<div><span class="col-label">Stored</span><span class="col-value">' + location + '</span></div>' +
-      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+    var saveBtn = document.getElementById('partSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-    document.getElementById('partsList').appendChild(row);
-    document.getElementById('partsList').style.display = 'block';
-    document.getElementById('partsEmpty').style.display = 'none';
+    apiPost('addPartEntry', {
+      vehicleId: VEHICLE_ID,
+      entry: { partName: name, relatedModification: relatedMod, dateRemoved: date, odometer: odo, condition: condition, location: location, notes: notes }
+    }).then(function (res) {
+      if (res.ok) {
+        showToast('Part saved to the Sheet');
+        closeSheet('partSheet');
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — part was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save part';
+    });
+  }
 
-    closeSheet('partSheet');
+  function customTaskRowHtml(task) {
+    var interval = [task.IntervalKm ? Number(task.IntervalKm).toLocaleString('en-US') + ' km' : null, task.IntervalMonths ? task.IntervalMonths + ' mo' : null].filter(Boolean).join(' / ') || 'no interval set';
+    return '<div class="task-row" data-entry-id="' + task.TaskID + '" data-source="task">' +
+      '<div class="row-lead">' + catChipHtml(task.TaskName) + '<div><div class="item-name">' + task.TaskName + '</div><div class="item-sub">' + (task.Group || 'Custom') + ' &middot; ' + interval + ' &middot; also appears above once logged</div></div></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+    '</div>';
+  }
+
+  function renderCustomTasksList(customTasks) {
+    document.getElementById('customTaskList').innerHTML = customTasks.map(customTaskRowHtml).join('');
   }
 
   function submitTaskForm(e) {
@@ -2481,16 +2707,32 @@
     var km = document.getElementById('taskKm').value;
     var months = document.getElementById('taskMonths').value;
     var group = document.getElementById('taskGroup').value;
-    var interval = [km ? Number(km).toLocaleString() + ' km' : null, months ? months + ' mo' : null].filter(Boolean).join(' / ') || 'no interval set';
 
-    var row = document.createElement('div');
-    row.className = 'task-row';
-    row.innerHTML =
-      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + group + ' &middot; ' + interval + ' &middot; custom task, no record yet</div></div></div>' +
-      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+    var saveBtn = document.getElementById('scheduleTaskSheet').querySelector('.btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-    document.getElementById('customTaskList').appendChild(row);
-    closeSheet('scheduleTaskSheet');
+    apiPost('addCustomTask', {
+      vehicleId: VEHICLE_ID,
+      entry: { taskName: name, intervalKm: km, intervalMonths: months, group: group }
+    }).then(function (res) {
+      if (res.ok) {
+        showToast('Custom task saved to the Sheet');
+        closeSheet('scheduleTaskSheet');
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskKm').value = '';
+        document.getElementById('taskMonths').value = '';
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — task was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save task';
+    });
   }
 
   recalcCostTotals();
