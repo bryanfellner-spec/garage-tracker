@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var t=localStorage.getItem('garageTheme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<title>2014 Audi A4 S-line — Garage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F12;
+    --surface: #16181C;
+    --surface-raised: #1D2025;
+    --border: #292C32;
+    --border-soft: #202329;
+    --text: #EDEBE6;
+    --text-muted: #8B8E95;
+    --text-faint: #55585F;
+
+    --accent: #6E93AD; /* this vehicle's identity accent — Audi */
+
+    --status-ok: #6FBF73;
+    --status-ok-dim: rgba(111, 191, 115, 0.10);
+    --status-soon: #E0A83E;
+    --status-soon-dim: rgba(224, 168, 62, 0.10);
+    --status-overdue: #E0554A;
+    --status-overdue-dim: rgba(224, 85, 74, 0.10);
+    --status-none: #55585F;
+    --status-none-dim: rgba(85, 88, 95, 0.08);
+  }
+
+  /* checker pattern (photo placeholders) — themed */
+  :root { --checker: #191B1F; }
+
+  /* maintenance-category identity colors — used for the small icon chips
+     on schedule/activity/mod rows. Independent of status (ok/soon/overdue)
+     colors, which continue to mean urgency, not category. */
+  :root {
+    --cat-oil: #D98E3A;      --cat-oil-dim: rgba(217,142,58,0.16);
+    --cat-filter: #4FA6A6;   --cat-filter-dim: rgba(79,166,166,0.16);
+    --cat-fluid: #4F8FD9;    --cat-fluid-dim: rgba(79,143,217,0.16);
+    --cat-spark: #C9A227;    --cat-spark-dim: rgba(201,162,39,0.18);
+    --cat-battery: #D9C23A;  --cat-battery-dim: rgba(217,194,58,0.18);
+    --cat-wheel: #7A87C9;    --cat-wheel-dim: rgba(122,135,201,0.16);
+    --cat-general: #9295A0;  --cat-general-dim: rgba(146,149,160,0.15);
+  }
+
+  /* ---------- light theme ---------- */
+  [data-theme="light"] {
+    --bg: #F3F1EA;
+    --surface: #FFFFFF;
+    --surface-raised: #F6F4EE;
+    --border: #DEDAD0;
+    --border-soft: #E9E6DE;
+    --text: #1E2024;
+    --text-muted: #5B5D63;
+    --text-faint: #93958E;
+    --checker: #EAE7DE;
+
+    --status-ok-dim: rgba(111, 191, 115, 0.18);
+    --status-soon-dim: rgba(224, 168, 62, 0.20);
+    --status-overdue-dim: rgba(224, 85, 74, 0.18);
+    --status-none-dim: rgba(85, 88, 95, 0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 24px 120px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-faint);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .back-link:hover { color: var(--text-muted); }
+
+  /* ---------- vehicle header ---------- */
+  .vehicle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .vehicle-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: 0.01em;
+    margin: 0 0 4px;
+  }
+
+  .vehicle-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .vehicle-vin {
+    color: var(--text-faint);
+    font-size: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.03em;
+    margin: 6px 0 0;
+  }
+
+  .odo-readout {
+    text-align: right;
+  }
+
+  .odo-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .odo-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
+  /* ---------- hero photo ---------- */
+  .hero-photo {
+    aspect-ratio: 21 / 9;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--surface-raised),
+        var(--surface-raised) 10px,
+        var(--checker) 10px,
+        var(--checker) 20px
+      );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .hero-photo svg {
+    width: 88px;
+    height: 88px;
+    opacity: 0.22;
+    stroke: var(--text);
+  }
+
+  .hero-photo .add-photo {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- quick stats ---------- */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  .qs-item {
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+
+  .qs-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .qs-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .quick-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- section headings ---------- */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .section-note {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- schedule list ---------- */
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .schedule-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--row-color, var(--border));
+    border-radius: 8px;
+  }
+
+  .schedule-row .item-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .schedule-row .item-sub {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 2px;
+  }
+
+  .schedule-row .col-label {
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.02em;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .schedule-row .col-value {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .status-pill.ok { background: var(--status-ok-dim); color: var(--status-ok); }
+  .status-pill.soon { background: var(--status-soon-dim); color: var(--status-soon); }
+  .status-pill.overdue { background: var(--status-overdue-dim); color: var(--status-overdue); }
+  .status-pill.none { background: var(--status-none-dim); color: var(--status-none); }
+
+  @media (max-width: 640px) {
+    .schedule-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .schedule-row .status-pill { justify-self: flex-start; margin-top: 4px; }
+  }
+
+  /* ---------- seasonal / as-needed ---------- */
+  .seasonal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .seasonal-row {
+    background: var(--surface);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .seasonal-row .item-name { font-size: 14px; font-weight: 500; }
+  .seasonal-row .item-detail {
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: right;
+  }
+
+  /* ---------- recent activity ---------- */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activity-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+
+  .activity-row:last-child { border-bottom: none; }
+
+  .activity-left { display: flex; gap: 10px; align-items: baseline; }
+  .activity-date { color: var(--text-faint); font-size: 12px; min-width: 72px; }
+  .activity-cat { color: var(--text-muted); font-size: 12px; }
+  .activity-desc { color: var(--text); }
+  .activity-odo { color: var(--text-faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- floating add-entry action ---------- */
+  .fab {
+    position: fixed;
+    bottom: 26px;
+    right: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    border-radius: 100px;
+    padding: 14px 20px 14px 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .fab:hover { filter: brightness(1.08); }
+  .fab svg { width: 18px; height: 18px; stroke: #0D0F12; stroke-width: 2.2; }
+
+  /* ---------- add-entry category sheet (preview only) ---------- */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .sheet-backdrop.open { display: flex; }
+
+  .sheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 20px 20px 28px;
+  }
+
+  .sheet-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+
+  .sheet-sub {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin: 0 0 16px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .category-chip {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .category-chip:hover { border-color: var(--accent); }
+
+  .sheet-close {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* ---------- clickable rows ---------- */
+  .schedule-row, .seasonal-row, .mod-row {
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .schedule-row:hover, .seasonal-row:hover, .mod-row:hover {
+    background: var(--surface-raised);
+  }
+  .schedule-row:focus-visible, .seasonal-row:focus-visible, .mod-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  /* ---------- entry form (inside sheets) ---------- */
+  .form-field { margin-bottom: 14px; }
+  .form-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-bottom: 5px;
+    letter-spacing: 0.02em;
+  }
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    width: 100%;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-field.locked input,
+  .form-field.locked select {
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .status-toggle { display: flex; gap: 8px; }
+  .status-toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: var(--surface-raised);
+  }
+  .status-toggle input { display: none; width: auto; }
+  .status-toggle input:checked + span { color: var(--text); }
+  .status-toggle label:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(110,147,173,0.12);
+  }
+
+  /* ---------- section add button ---------- */
+  .section-add-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .section-add-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ---------- modifications ---------- */
+  .mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .mod-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .mod-row .item-name { font-weight: 500; font-size: 14px; }
+  .mod-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .mod-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .mod-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .mod-badge.installed { background: rgba(111,191,115,0.10); color: var(--status-ok); }
+  .mod-badge.planned { background: rgba(224,168,62,0.10); color: var(--status-soon); }
+
+  @media (max-width: 640px) {
+    .mod-row { grid-template-columns: 1fr; }
+    .mod-badge { justify-self: flex-start; margin-top: 4px; }
+  }
+
+  /* ---------- factory parts storage ---------- */
+  .parts-empty {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .parts-empty p {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin: 0 0 12px;
+    line-height: 1.6;
+  }
+
+  /* ---------- quick mileage entry ---------- */
+  .quick-mileage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    justify-content: flex-end;
+  }
+  .quick-mileage input {
+    width: 110px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .quick-mileage input:focus { outline: none; border-color: var(--accent); }
+  .quick-mileage button {
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .quick-mileage-note {
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* ---------- toggle switch ---------- */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: rgba(110,147,173,0.35); }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(16px);
+    background: var(--accent);
+  }
+  .toggle-label-text { font-size: 13px; color: var(--text-muted); }
+
+  /* ---------- tire sets ---------- */
+  .tire-sets-off {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .tire-sets-off p {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .tire-set-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 640px) {
+    .tire-set-grid { grid-template-columns: 1fr; }
+  }
+  .tire-set-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .tire-set-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .tire-set-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .tire-set-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 9px;
+    border-radius: 100px;
+  }
+  .tire-set-badge.on-car { background: rgba(111,191,115,0.10); color: var(--status-ok); }
+  .tire-set-badge.stored { background: rgba(85,88,95,0.12); color: var(--text-muted); }
+  .tire-set-stat { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-soft); }
+  .tire-set-stat:last-of-type { border-bottom: none; }
+  .tire-set-stat .label { color: var(--text-faint); }
+  .tire-set-stat .value { color: var(--text); font-variant-numeric: tabular-nums; }
+  .tire-set-stat .value.muted { color: var(--text-faint); font-style: italic; }
+  .tire-set-caveat {
+    font-size: 11px;
+    color: var(--status-soon);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* ---------- delete / undo ---------- */
+  .row-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .row-delete-btn:hover { color: var(--status-overdue); background: var(--status-overdue-dim); }
+  .row-delete-btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 1.6; }
+  .row-delete-btn.is-undo {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+  }
+  .row-delete-btn.is-undo:hover { background: rgba(110,147,173,0.12); }
+
+  .activity-row.voided,
+  .mod-row.voided,
+  .part-row.voided,
+  .task-row.voided {
+    opacity: 0.45;
+  }
+  .activity-row.voided .activity-desc,
+  .activity-row.voided .activity-cat,
+  .mod-row.voided .item-name,
+  .part-row.voided .item-name,
+  .task-row.voided .item-name {
+    text-decoration: line-through;
+  }
+  .voided-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-style: italic;
+    margin-right: 4px;
+  }
+
+  .activity-row { position: relative; padding-right: 4px; }
+  .activity-row-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .part-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .part-row .item-name { font-weight: 500; font-size: 14px; }
+  .part-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+
+  .task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  .task-row .item-name { font-weight: 500; font-size: 14px; }
+  .task-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+
+  /* ---------- theme toggle ---------- */
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--text-faint); color: var(--text); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  [data-theme="light"] .theme-toggle .icon-sun { display: none; }
+  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+  /* ---------- category icon chips (blended in from reference design) ---------- */
+  .row-lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-width: 0;
+  }
+  .cat-chip {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--chip-bg, var(--cat-general-dim));
+    color: var(--chip-color, var(--cat-general));
+  }
+  .cat-chip svg { width: 16px; height: 16px; }
+  .cat-chip.sm { width: 24px; height: 24px; border-radius: 7px; }
+  .cat-chip.sm svg { width: 13px; height: 13px; }
+
+  /* ---------- due-progress bar (blended in from reference design) ---------- */
+  .due-bar-track {
+    height: 5px;
+    border-radius: 100px;
+    background: var(--border-soft);
+    overflow: hidden;
+    margin-top: 9px;
+    max-width: 240px;
+  }
+  .due-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--row-color, var(--status-ok));
+  }
+
+  /* ---------- ownership & costs / recurring costs (added) ---------- */
+  .cost-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .cost-stats .qs-item { background: var(--surface); padding: 14px 16px; }
+  @media (max-width: 640px) { .cost-stats { grid-template-columns: repeat(2, 1fr); } }
+
+  .ownership-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .ownership-row .item-name { font-size: 12px; color: var(--text-faint); display: block; margin-bottom: 3px; }
+  .ownership-row .item-value { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 16px; }
+  .ownership-row .item-value.muted { color: var(--text-faint); font-family: 'Inter', sans-serif; font-weight: 400; font-size: 13px; }
+
+  /* cost tag shown on activity/mod rows */
+  .cost-tag {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .cost-tag.none { color: var(--text-faint); }
+
+  /* ---------- SGI registration & plates (added) ---------- */
+  .sgi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .sgi-card .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 3px; }
+
+  /* ---------- fuel & mileage (added) ---------- */
+  .fuel-row {
+    display: grid;
+    grid-template-columns: 78px 1fr 1fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .fuel-row:last-child { border-bottom: none; }
+  .fuel-row .col-label { font-size: 10px; color: var(--text-faint); display: block; margin-bottom: 2px; }
+  .fuel-row .col-value { font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) {
+    .fuel-row { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <a class="back-link" href="index.html" style="margin-bottom:0;">&larr; All vehicles</a>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light and dark theme" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+  </div>
+
+  <div class="vehicle-header">
+    <div>
+      <h1 class="vehicle-title">2014 Audi A4 S-line</h1>
+      <p class="vehicle-sub">2.0T &middot; EA888 &middot; quattro</p>
+      <p class="vehicle-vin">VIN WAUFFCFL3EN007074</p>
+    </div>
+    <div class="odo-readout">
+      <div class="odo-value" id="odoDisplay">146,053</div>
+      <div class="odo-label" id="odoAsOf">km &middot; as of Jun 8, 2026</div>
+      <div class="quick-mileage">
+        <input type="number" id="odoInput" placeholder="146053">
+        <button onclick="updateMileage()">Update</button>
+      </div>
+      <div class="quick-mileage-note">Quick update — doesn't log a service entry</div>
+    </div>
+  </div>
+
+  <div class="hero-photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/>
+      <path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+      <circle cx="7" cy="17.5" r="1.4"/>
+      <circle cx="17" cy="17.5" r="1.4"/>
+    </svg>
+    <span class="add-photo">add photo</span>
+  </div>
+
+  <div class="quick-stats">
+    <div class="qs-item">
+      <div class="qs-value">35</div>
+      <div class="qs-label">Service records logged</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value">12</div>
+      <div class="qs-label">Oil changes on record</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value">1 <span style="font-size:13px;color:var(--text-faint);font-family:'Inter',sans-serif;font-weight:400;">+3 planned</span></div>
+      <div class="qs-label">Modifications</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value">150,000</div>
+      <div class="qs-label">Latest odometer on file</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Ownership &amp; Costs</h2>
+      <button class="section-add-btn" onclick="openOwnershipForm()">Edit purchase info</button>
+    </div>
+
+    <div class="cost-stats" id="costStats">
+      <div class="qs-item">
+        <div class="qs-value" id="statServiceSpent">$0</div>
+        <div class="qs-label">Logged service &amp; repair costs</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="statModSpent">$0</div>
+        <div class="qs-label">Installed mod costs</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="statWishlist">$0</div>
+        <div class="qs-label">Wishlist / planned spend</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="statOwnedFor">&mdash;</div>
+        <div class="qs-label">Owned for</div>
+      </div>
+    </div>
+
+    <div class="ownership-row">
+      <div>
+        <span class="item-name">Purchase price</span>
+        <span class="item-value muted" id="purchasePriceDisplay">not set</span>
+      </div>
+      <div>
+        <span class="item-name">Date bought</span>
+        <span class="item-value muted" id="dateBoughtDisplay">not set</span>
+      </div>
+      <div>
+        <span class="item-name">Total invested (purchase + logged costs)</span>
+        <span class="item-value muted" id="totalInvestedDisplay">$0</span>
+      </div>
+      <div>
+        <span class="item-name">Cost per year owned</span>
+        <span class="item-value muted" id="costPerYearDisplay">&mdash;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Registration &amp; Plates</h2>
+      <button class="section-add-btn" onclick="openSgiForm()">Edit registration</button>
+    </div>
+    <div class="sgi-card" id="sgiCard">
+      <div>
+        <div class="item-name" id="sgiHeadline" style="font-size:14px; font-weight:500; color:var(--text);">Not set up yet</div>
+        <div class="item-sub" id="sgiSub">Choose Annual (paid in full) or Monthly pre-authorized debit, so renewals show up here.</div>
+      </div>
+      <span class="status-pill none" id="sgiStatusPill">Not set</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Scheduled maintenance</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="section-note">sorted by urgency</span>
+        <button class="section-add-btn" onclick="openScheduleTaskForm()">+ Add task</button>
+      </div>
+    </div>
+    <div class="schedule-list">
+
+      <div class="schedule-row" style="--row-color: var(--status-overdue);" role="button" tabindex="0" onclick="openFormDirect('Brake Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Brake Fluid')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Brake Fluid</div><div class="item-sub">Last: Apr 11, 2020</div><div class="due-bar-track"><div class="due-bar-fill" style="width:100%;"></div></div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">24 mo</span></div>
+        <div><span class="col-label">Was due</span><span class="col-value">Apr 11, 2022</span></div>
+        <span class="status-pill overdue">Overdue</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-overdue);" role="button" tabindex="0" onclick="openFormDirect('Spark Plugs')" onkeydown="if(event.key==='Enter')openFormDirect('Spark Plugs')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-spark);--chip-bg:var(--cat-spark-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h5.3L9.2 22l9-12.5h-5.3z"/></svg></span><div><div class="item-name">Spark Plugs</div><div class="item-sub">Last: Apr 16, 2021 &middot; 78,049 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:100%;"></div></div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 72 mo</span></div>
+        <div><span class="col-label">Was due</span><span class="col-value">138,049 km</span></div>
+        <span class="status-pill overdue">Overdue &middot; 8,004 km</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Oil Change')" onkeydown="if(event.key==='Enter')openFormDirect('Oil Change')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span><div><div class="item-name">Oil Change</div><div class="item-sub">Last: Jun 8, 2026 &middot; 146,053 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:3%;"></div></div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">161,053 km</span></div>
+        <span class="status-pill ok">OK &middot; 15,000 km left</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Cabin Air Filter')" onkeydown="if(event.key==='Enter')openFormDirect('Cabin Air Filter')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Cabin Air Filter</div><div class="item-sub">Last: Oct 1, 2025 &middot; 135,000 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:37%;"></div></div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">165,000 km</span></div>
+        <span class="status-pill ok">OK &middot; 18,947 km left</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Engine Air Filter')" onkeydown="if(event.key==='Enter')openFormDirect('Engine Air Filter')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Engine Air Filter</div><div class="item-sub">Last: Nov 5, 2023 &middot; 109,500 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:41%;"></div></div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">90,000 km</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">199,500 km</span></div>
+        <span class="status-pill ok">OK &middot; 53,447 km left</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Brake Disc Thickness Check')" onkeydown="if(event.key==='Enter')openFormDirect('Brake Disc Thickness Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Brake Disc Thickness Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Transmission Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Transmission Fluid')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Transmission Fluid</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">60,000 km</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Serpentine Belt Check')" onkeydown="if(event.key==='Enter')openFormDirect('Serpentine Belt Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Serpentine Belt Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">120,000 km</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Coolant (G13) Replacement')" onkeydown="if(event.key==='Enter')openFormDirect('Coolant (G13) Replacement')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Coolant (G13) Replacement</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">100,000 km / 60 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+
+    </div>
+
+    <div class="schedule-list" id="moreScheduleList" style="display:none; margin-top:6px;">
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Wiper Blades')" onkeydown="if(event.key==='Enter')openFormDirect('Wiper Blades')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Wiper Blades</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Washer System & Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Washer System & Fluid')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Washer System &amp; Fluid</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Brake System Inspection')" onkeydown="if(event.key==='Enter')openFormDirect('Brake System Inspection')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Brake System Inspection</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Tires & TPMS Check')" onkeydown="if(event.key==='Enter')openFormDirect('Tires & TPMS Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Tires &amp; TPMS Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Tire Rotation')" onkeydown="if(event.key==='Enter')openFormDirect('Tire Rotation')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Tire Rotation</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Battery Check')" onkeydown="if(event.key==='Enter')openFormDirect('Battery Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-battery);--chip-bg:var(--cat-battery-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="15" height="11" rx="2"/><line x1="20" y1="10.3" x2="20" y2="14.7"/><line x1="7.5" y1="10" x2="7.5" y2="15"/></svg></span><div><div class="item-name">Battery Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Cooling System Check')" onkeydown="if(event.key==='Enter')openFormDirect('Cooling System Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Cooling System Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Drive Shaft Boots')" onkeydown="if(event.key==='Enter')openFormDirect('Drive Shaft Boots')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Drive Shaft Boots</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Exhaust System Check')" onkeydown="if(event.key==='Enter')openFormDirect('Exhaust System Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Exhaust System Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Suspension & Axle Check')" onkeydown="if(event.key==='Enter')openFormDirect('Suspension & Axle Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Suspension &amp; Axle Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Air-cleaner Snow Screen Clean')" onkeydown="if(event.key==='Enter')openFormDirect('Air-cleaner Snow Screen Clean')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Air-cleaner Snow Screen Clean</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Sunroof Rails Clean/Lube')" onkeydown="if(event.key==='Enter')openFormDirect('Sunroof Rails Clean/Lube')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Sunroof Rails Clean/Lube</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Plenum Drain Check')" onkeydown="if(event.key==='Enter')openFormDirect('Plenum Drain Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Plenum Drain Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Underbody & Corrosion Visual')" onkeydown="if(event.key==='Enter')openFormDirect('Underbody & Corrosion Visual')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Underbody &amp; Corrosion Visual</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Door Hinges/Locks Lube')" onkeydown="if(event.key==='Enter')openFormDirect('Door Hinges/Locks Lube')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Door Hinges/Locks Lube</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Interior Lights Check')" onkeydown="if(event.key==='Enter')openFormDirect('Interior Lights Check')">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Interior Lights Check</div><div class="item-sub">No record on file</div></div></div>
+        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
+        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
+        <span class="status-pill none">No record</span>
+      </div>
+    </div>
+
+    <button class="section-add-btn" style="margin-top:10px;" onclick="toggleMoreSchedule()" id="moreScheduleBtn">Show 16 more factory items (incl. Wiper Blades)</button>
+    <div id="customTaskList"></div>
+    <p class="section-note" style="margin-top:8px;">Click any item to log a new entry against it.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">As-needed &amp; seasonal</h2>
+      <span class="section-note">no due-date logic — informational only</span>
+    </div>
+    <div class="seasonal-list">
+      <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Tire Swap')" onkeydown="if(event.key==='Enter')openFormDirect('Tire Swap')">
+        <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Tire Swap</span></span>
+        <span class="item-detail">Last: Oct 22, 2023 &middot; 109,500 km</span>
+      </div>
+      <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Alignment')" onkeydown="if(event.key==='Enter')openFormDirect('Alignment')">
+        <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Alignment</span></span>
+        <span class="item-detail">Last: Sep 15, 2023 &middot; 105,000 km</span>
+      </div>
+      <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Timing Chain')" onkeydown="if(event.key==='Enter')openFormDirect('Timing Chain')">
+        <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><span class="item-name">Timing Chain</span></span>
+        <span class="item-detail">Last: Sep 12, 2018 &middot; 58,433 km &mdash; watch for cold-start rattle</span>
+      </div>
+      <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Front Wheel Bearings')" onkeydown="if(event.key==='Enter')openFormDirect('Front Wheel Bearings')">
+        <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Front Wheel Bearings</span></span>
+        <span class="item-detail">Replaced Mar 1, 2025 &middot; 125,000 km &mdash; watch opposite side</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Tire Sets</h2>
+      <div class="toggle-row">
+        <span class="toggle-label-text">Separate winter rims</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="winterRimsToggle" checked onchange="toggleTireSets()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div id="tireSetsOn">
+      <div class="tire-set-grid">
+        <div class="tire-set-card">
+          <div class="tire-set-head">
+            <span class="tire-set-name">Winter Set</span>
+            <span class="tire-set-badge on-car">On car</span>
+          </div>
+          <div class="tire-set-stat"><span class="label">Last mounted</span><span class="value">Oct 22, 2023 &middot; 109,500 km</span></div>
+          <div class="tire-set-stat"><span class="label">km on this stint</span><span class="value">36,553 km</span></div>
+          <div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~43,053 km</span></div>
+          <div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>
+          <div class="tire-set-caveat">No swap logged since Oct 2023 — confirm this set has really been on continuously, or entries are missing.</div>
+        </div>
+        <div class="tire-set-card">
+          <div class="tire-set-head">
+            <span class="tire-set-name">Summer Set</span>
+            <span class="tire-set-badge stored">In storage</span>
+          </div>
+          <div class="tire-set-stat"><span class="label">Last dismounted</span><span class="value">Oct 22, 2023 &middot; 109,500 km</span></div>
+          <div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~22,384 km</span></div>
+          <div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>
+          <div class="tire-set-caveat">One 2019 swap row has an odometer lower than an earlier entry — excluded from this total pending your confirmation.</div>
+        </div>
+      </div>
+      <button class="section-add-btn" style="margin-top:12px;" onclick="openTireSwapForm()">+ Log tire swap</button>
+    </div>
+
+    <div id="tireSetsOff" class="tire-sets-off" style="display:none;">
+      <p>Not tracking separate tire sets for this vehicle. Turn this on if it ever gets dedicated winter rims.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Modifications</h2>
+      <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
+    </div>
+    <div class="mod-list" id="modList">
+      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="installed" onclick="openModForm('Cold Air Intake', this)" onkeydown="if(event.key==='Enter')openModForm('Cold Air Intake', this)">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Cold Air Intake</div><div class="item-sub">Intake &middot; ~early 2025 &middot; ~127,000 km</div></div></div>
+        <div><span class="col-label">Details</span><span class="col-value">Aftermarket cold air intake</span></div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="cost-tag none">no cost logged</span>
+          <span class="mod-badge installed">Installed</span>
+          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+        </div>
+      </div>
+
+      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('Downpipe & Full Exhaust', this)" onkeydown="if(event.key==='Enter')openModForm('Downpipe & Full Exhaust', this)">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Downpipe &amp; Full Exhaust</div><div class="item-sub">Exhaust &middot; planned by Bryan's son</div></div></div>
+        <div><span class="col-label">Details</span><span class="col-value">Catless/high-flow downpipe + full exhaust</span></div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="cost-tag none">no estimate</span>
+          <span class="mod-badge planned">Planned</span>
+          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+        </div>
+      </div>
+
+      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('Stage 2 ECU Tune', this)" onkeydown="if(event.key==='Enter')openModForm('Stage 2 ECU Tune', this)">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Stage 2 ECU Tune</div><div class="item-sub">ECU/Tune &middot; planned, pairs with exhaust</div></div></div>
+        <div><span class="col-label">Details</span><span class="col-value">Requires supporting exhaust mods first</span></div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="cost-tag none">no estimate</span>
+          <span class="mod-badge planned">Planned</span>
+          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+        </div>
+      </div>
+
+      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('New Rims', this)" onkeydown="if(event.key==='Enter')openModForm('New Rims', this)">
+        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">New Rims</div><div class="item-sub">Wheels/Tires &middot; planned</div></div></div>
+        <div><span class="col-label">Details</span><span class="col-value">Spec not finalized</span></div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="cost-tag none">no estimate</span>
+          <span class="mod-badge planned">Planned</span>
+          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Factory parts storage</h2>
+      <button class="section-add-btn" onclick="openPartForm()">+ Log a part</button>
+    </div>
+    <div class="parts-empty" id="partsEmpty">
+      <p>Nothing stored yet. Once a modification comes off (e.g. the factory exhaust when the downpipe goes in), log the removed part here so a restore-to-stock stays possible.</p>
+      <button class="section-add-btn" onclick="openPartForm()">+ Log a part</button>
+    </div>
+    <div id="partsList" style="display:none;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Fuel &amp; Mileage</h2>
+      <button class="section-add-btn" onclick="openFuelForm()">+ Log fill-up</button>
+    </div>
+
+    <div class="cost-stats" id="fuelStats">
+      <div class="qs-item">
+        <div class="qs-value" id="fuelStatWeek">$0</div>
+        <div class="qs-label">This week</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="fuelStatMonth">$0</div>
+        <div class="qs-label">This month</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="fuelStatYear">$0</div>
+        <div class="qs-label">This year</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="fuelStatAvgPerL">&mdash;</div>
+        <div class="qs-label">Avg. $/L</div>
+      </div>
+    </div>
+
+    <div class="parts-empty" id="fuelEmpty">
+      <p>No fill-ups logged yet. Log one after your next fill-up to start tracking weekly / monthly / yearly fuel spend and $/L.</p>
+      <button class="section-add-btn" onclick="openFuelForm()">+ Log fill-up</button>
+    </div>
+    <div id="fuelList" style="display:none;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Recent activity</h2>
+    </div>
+    <div class="activity-list" id="activityList">
+      <div class="activity-row" data-cost="0">
+        <div class="activity-row-inner">
+          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
+            <span class="activity-date">Jun 8 '26</span>
+            <span class="activity-cat">Oil Change</span>
+            <span class="activity-desc">Engine oil &amp; filter change</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="activity-odo">146,053 km</span>
+            <span class="cost-tag none">no cost logged</span>
+            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="activity-row" data-cost="0">
+        <div class="activity-row-inner">
+          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
+            <span class="activity-date">Oct 27 '25</span>
+            <span class="activity-cat">Oil Change</span>
+            <span class="activity-desc">Engine oil &amp; filter change</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="activity-odo">137,539 km</span>
+            <span class="cost-tag none">no cost logged</span>
+            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="activity-row" data-cost="0">
+        <div class="activity-row-inner">
+          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span>
+            <span class="activity-date">Oct 1 '25</span>
+            <span class="activity-cat">Cabin Air Filter</span>
+            <span class="activity-desc">Cabin (pollen) air filter replaced</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="activity-odo">135,000 km</span>
+            <span class="cost-tag none">no cost logged</span>
+            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="activity-row" data-cost="0">
+        <div class="activity-row-inner">
+          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
+            <span class="activity-date">Apr 6 '25</span>
+            <span class="activity-cat">Oil Change</span>
+            <span class="activity-desc">Engine oil &amp; filter change</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="activity-odo">128,638 km</span>
+            <span class="cost-tag none">no cost logged</span>
+            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="activity-row" data-cost="0">
+        <div class="activity-row-inner">
+          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span>
+            <span class="activity-date">Mar 1 '25</span>
+            <span class="activity-cat">Front Wheel Bearings</span>
+            <span class="activity-desc">Front wheel bearing(s) replaced</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="activity-odo">125,000 km</span>
+            <span class="cost-tag none">no cost logged</span>
+            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<button class="fab" onclick="openCategoryPicker()">
+  <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  Add entry
+</button>
+
+<!-- SERVICE LOG entry sheet: category picker, then the form -->
+<div class="sheet-backdrop" id="addSheet" onclick="if(event.target===this)closeSheet('addSheet')">
+  <div class="sheet">
+
+    <div id="categoryView">
+      <h3 class="sheet-title">Log a new entry</h3>
+      <p class="sheet-sub">Pick a category — non-standard work still logs fine, it just won't drive a due-date alert.</p>
+      <div class="category-grid">
+        <button class="category-chip" onclick="selectCategory('Oil Change')">Oil Change</button>
+        <button class="category-chip" onclick="selectCategory('Tire Swap')">Tire Swap</button>
+        <button class="category-chip" onclick="selectCategory('Brake Fluid')">Brake Fluid</button>
+        <button class="category-chip" onclick="selectCategory('Cabin Air Filter')">Cabin Air Filter</button>
+        <button class="category-chip" onclick="selectCategory('Engine Air Filter')">Engine Air Filter</button>
+        <button class="category-chip" onclick="selectCategory('Spark Plugs')">Spark Plugs</button>
+        <button class="category-chip" onclick="selectCategory('Alignment')">Alignment</button>
+        <button class="category-chip" onclick="selectCategory('Other / custom')">Other / custom&hellip;</button>
+      </div>
+      <button class="sheet-close" onclick="closeSheet('addSheet')">Cancel</button>
+    </div>
+
+    <form id="formView" style="display:none;" onsubmit="submitEntryForm(event)">
+      <h3 class="sheet-title" id="formTitle">Log entry</h3>
+      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+
+      <div class="form-field locked">
+        <label>Category</label>
+        <input type="text" id="entryCategory" readonly>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" id="entryDate">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" id="entryOdo" placeholder="e.g. 146500">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Description</label>
+        <input type="text" id="entryDesc" placeholder="e.g. Engine oil & filter change">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Cost ($)</label>
+          <input type="number" step="0.01" id="entryCost" placeholder="optional">
+        </div>
+        <div class="form-field">
+          <label>Performed by</label>
+          <input type="text" placeholder="e.g. self, shop name">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('addSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save entry</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- MODIFICATIONS entry sheet -->
+<div class="sheet-backdrop" id="modSheet" onclick="if(event.target===this)closeSheet('modSheet')">
+  <div class="sheet">
+    <form onsubmit="submitModForm(event)">
+      <h3 class="sheet-title" id="modFormTitle">Log a modification</h3>
+      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+
+      <div class="form-field">
+        <label>Modification</label>
+        <input type="text" id="modName" placeholder="e.g. Downpipe & full exhaust">
+      </div>
+      <div class="form-field">
+        <label>Category</label>
+        <select id="modCategory">
+          <option>Intake</option>
+          <option>Exhaust</option>
+          <option>ECU/Tune</option>
+          <option>Suspension</option>
+          <option>Wheels/Tires</option>
+          <option>Brakes</option>
+          <option>Cosmetic</option>
+          <option>Lighting</option>
+          <option>Audio</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <div class="status-toggle">
+          <label><input type="radio" name="modStatus" id="modStatusPlanned" checked><span>Planned</span></label>
+          <label><input type="radio" name="modStatus" id="modStatusInstalled"><span>Installed</span></label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date (if installed)</label>
+          <input type="date">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" placeholder="optional">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Details / specs</label>
+        <textarea id="modDetails" placeholder="e.g. catless downpipe, cat-back exhaust, specific brand/part"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Cost ($)</label>
+          <input type="number" step="0.01" id="modCost" placeholder="optional">
+        </div>
+        <div class="form-field">
+          <label>Installed by</label>
+          <input type="text" placeholder="e.g. shop name, self">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('modSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save modification</button>
+      </div>
+      <button type="button" class="row-delete-btn" id="modDeleteBtn" style="display:none; width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="deleteFromForm()">Remove this modification</button>
+    </form>
+  </div>
+</div>
+
+<!-- FACTORY PARTS STORAGE entry sheet -->
+<div class="sheet-backdrop" id="partSheet" onclick="if(event.target===this)closeSheet('partSheet')">
+  <div class="sheet">
+    <form onsubmit="submitPartForm(event)">
+      <h3 class="sheet-title">Log a factory part</h3>
+      <p class="sheet-sub">For OEM parts removed during a modification and kept for a possible restore-to-stock.</p>
+
+      <div class="form-field">
+        <label>Part</label>
+        <input type="text" id="partName" placeholder="e.g. Factory cat-back exhaust">
+      </div>
+      <div class="form-field">
+        <label>Related modification</label>
+        <select id="partRelatedMod">
+          <option>Downpipe & Full Exhaust</option>
+          <option>Stage 2 ECU Tune</option>
+          <option>New Rims</option>
+          <option>Cold Air Intake</option>
+          <option>Other / not tied to a mod</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date removed</label>
+          <input type="date" id="partDate">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" id="partOdo" placeholder="optional">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Condition</label>
+          <select id="partCondition">
+            <option>New / like new</option>
+            <option>Good</option>
+            <option>Fair</option>
+            <option>Poor</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Storage location</label>
+          <input type="text" id="partLocation" placeholder="e.g. garage shelf, parents' shop">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('partSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save part</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TIRE SWAP entry sheet -->
+<div class="sheet-backdrop" id="tireSheet" onclick="if(event.target===this)closeSheet('tireSheet')">
+  <div class="sheet">
+    <form onsubmit="event.preventDefault(); closeSheet('tireSheet');">
+      <h3 class="sheet-title">Log a tire swap</h3>
+      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" placeholder="e.g. 150000">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Set now going on</label>
+        <select>
+          <option>Winter Set</option>
+          <option>Summer Set</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Tread depth of set coming off (mm)</label>
+        <input type="number" step="0.1" placeholder="optional">
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('tireSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save swap</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD SCHEDULED TASK sheet -->
+<div class="sheet-backdrop" id="scheduleTaskSheet" onclick="if(event.target===this)closeSheet('scheduleTaskSheet')">
+  <div class="sheet">
+    <form onsubmit="submitTaskForm(event)">
+      <h3 class="sheet-title">Add a scheduled task</h3>
+      <p class="sheet-sub">Defines a new recurring item — separate from logging work that's already done.</p>
+
+      <div class="form-field">
+        <label>Task name</label>
+        <input type="text" id="taskName" placeholder="e.g. Intercooler pipe inspection">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Interval (km)</label>
+          <input type="number" id="taskKm" placeholder="leave blank if time-only">
+        </div>
+        <div class="form-field">
+          <label>Interval (months)</label>
+          <input type="number" id="taskMonths" placeholder="leave blank if km-only">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Group</label>
+          <select id="taskGroup">
+            <option>Standard</option>
+            <option>Major</option>
+            <option>Additional</option>
+            <option>Recommended</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>First service (optional)</label>
+          <input type="text" placeholder="e.g. 20,000 km">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes / source</label>
+        <textarea placeholder="optional — why this interval, where it came from"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('scheduleTaskSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Add to schedule</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- OWNERSHIP / PURCHASE INFO sheet -->
+<div class="sheet-backdrop" id="ownershipSheet" onclick="if(event.target===this)closeSheet('ownershipSheet')">
+  <div class="sheet">
+    <form onsubmit="submitOwnershipForm(event)">
+      <h3 class="sheet-title">Purchase info</h3>
+      <p class="sheet-sub">Used to compute total invested and cost-per-year-owned. Preview form — not yet wired to a backend.</p>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Purchase price ($)</label>
+          <input type="number" step="0.01" id="purchasePriceInput" placeholder="e.g. 18500">
+        </div>
+        <div class="form-field">
+          <label>Date bought</label>
+          <input type="date" id="dateBoughtInput">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('ownershipSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SGI REGISTRATION / PLATES sheet -->
+<div class="sheet-backdrop" id="sgiSheet" onclick="if(event.target===this)closeSheet('sgiSheet')">
+  <div class="sheet">
+    <form onsubmit="submitSgiForm(event)">
+      <h3 class="sheet-title">Registration &amp; plates</h3>
+      <p class="sheet-sub">SGI plates — annual paid in full, or monthly pre-authorized debit. Preview form — not yet wired to a backend.</p>
+      <div class="form-field">
+        <label>Payment type</label>
+        <div class="status-toggle">
+          <label><input type="radio" name="sgiType" id="sgiTypeAnnual" checked onclick="toggleSgiType()"><span>Annual</span></label>
+          <label><input type="radio" name="sgiType" id="sgiTypeMonthly" onclick="toggleSgiType()"><span>Monthly PAD</span></label>
+        </div>
+      </div>
+      <div id="sgiAnnualFields" class="form-row">
+        <div class="form-field">
+          <label>Annual amount ($)</label>
+          <input type="number" step="0.01" id="sgiAnnualAmount" placeholder="e.g. 980">
+        </div>
+        <div class="form-field">
+          <label>Renewal date</label>
+          <input type="date" id="sgiRenewalDate">
+        </div>
+      </div>
+      <div id="sgiMonthlyFields" class="form-row" style="display:none;">
+        <div class="form-field">
+          <label>Monthly amount ($)</label>
+          <input type="number" step="0.01" id="sgiMonthlyAmount" placeholder="e.g. 82">
+        </div>
+        <div class="form-field">
+          <label>Next debit date</label>
+          <input type="date" id="sgiNextDebit">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('sgiSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- FUEL / MILEAGE fill-up sheet -->
+<div class="sheet-backdrop" id="fuelSheet" onclick="if(event.target===this)closeSheet('fuelSheet')">
+  <div class="sheet">
+    <form onsubmit="submitFuelForm(event)">
+      <h3 class="sheet-title">Log a fill-up</h3>
+      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" id="fuelDate">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" id="fuelOdo" placeholder="e.g. 146500">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Liters</label>
+          <input type="number" step="0.01" id="fuelLiters" placeholder="e.g. 54.2">
+        </div>
+        <div class="form-field">
+          <label>Total cost ($)</label>
+          <input type="number" step="0.01" id="fuelCost" placeholder="e.g. 82.50">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('fuelSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save fill-up</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var isLight = html.getAttribute('data-theme') === 'light';
+    if (isLight) { html.removeAttribute('data-theme'); try{localStorage.setItem('garageTheme','dark');}catch(e){} }
+    else { html.setAttribute('data-theme', 'light'); try{localStorage.setItem('garageTheme','light');}catch(e){} }
+  }
+
+  var CAT_ICONS = {
+    oil: '<path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/>',
+    filter: '<path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/>',
+    fluid: '<path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/>',
+    spark: '<path d="M13 2 5 13.5h5.3L9.2 22l9-12.5h-5.3z"/>',
+    battery: '<rect x="3" y="7" width="15" height="11" rx="2"/><line x1="20" y1="10.3" x2="20" y2="14.7"/><line x1="7.5" y1="10" x2="7.5" y2="15"/>',
+    wheel: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/>',
+    general: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>'
+  };
+  function catForName(name) {
+    var n = (name || '').toLowerCase();
+    if (n.indexOf('oil') !== -1) return 'oil';
+    if (n.indexOf('filter') !== -1 || n.indexOf('snow screen') !== -1) return 'filter';
+    if (n.indexOf('fluid') !== -1 || n.indexOf('coolant') !== -1 || n.indexOf('washer') !== -1) return 'fluid';
+    if (n.indexOf('spark') !== -1) return 'spark';
+    if (n.indexOf('battery') !== -1) return 'battery';
+    if (n.indexOf('tire') !== -1 || n.indexOf('tpms') !== -1 || n.indexOf('alignment') !== -1 || n.indexOf('brake disc') !== -1 || n.indexOf('brake system') !== -1 || n.indexOf('wheel bearing') !== -1 || n.indexOf('rim') !== -1) return 'wheel';
+    return 'general';
+  }
+  function catChipHtml(name, sizeClass) {
+    var cat = catForName(name);
+    return '<span class="cat-chip ' + (sizeClass || '') + '" style="--chip-color:var(--cat-' + cat + ');--chip-bg:var(--cat-' + cat + '-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + CAT_ICONS[cat] + '</svg></span>';
+  }
+
+  function openCategoryPicker() {
+    document.getElementById('categoryView').style.display = 'block';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('addSheet').classList.add('open');
+  }
+  function selectCategory(name) {
+    document.getElementById('entryCategory').value = name;
+    document.getElementById('formTitle').textContent = 'Log: ' + name;
+    document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+  }
+  function openFormDirect(name) {
+    document.getElementById('entryCategory').value = name;
+    document.getElementById('formTitle').textContent = 'Log: ' + name;
+    document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('addSheet').classList.add('open');
+  }
+  var currentEditingModRow = null;
+
+  function openModForm(name, rowEl) {
+    currentEditingModRow = rowEl || null;
+    document.getElementById('modFormTitle').textContent = name ? 'Log: ' + name : 'Log a modification';
+    document.getElementById('modName').value = name || '';
+    document.getElementById('modDeleteBtn').style.display = rowEl ? 'flex' : 'none';
+    document.getElementById('modSheet').classList.add('open');
+  }
+  function openPartForm() {
+    document.getElementById('partSheet').classList.add('open');
+  }
+  function closeSheet(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  function openTireSwapForm() {
+    document.getElementById('tireSheet').classList.add('open');
+  }
+  function openScheduleTaskForm() {
+    document.getElementById('scheduleTaskSheet').classList.add('open');
+  }
+  function toggleTireSets() {
+    var on = document.getElementById('winterRimsToggle').checked;
+    document.getElementById('tireSetsOn').style.display = on ? 'block' : 'none';
+    document.getElementById('tireSetsOff').style.display = on ? 'none' : 'flex';
+  }
+  function toggleMoreSchedule() {
+    var list = document.getElementById('moreScheduleList');
+    var btn = document.getElementById('moreScheduleBtn');
+    var open = list.style.display === 'block';
+    list.style.display = open ? 'none' : 'block';
+    btn.textContent = open ? 'Show 16 more factory items (incl. Wiper Blades)' : 'Show fewer items';
+  }
+  function updateMileage() {
+    var input = document.getElementById('odoInput');
+    var val = parseInt(input.value, 10);
+    if (!val || val <= 0) return;
+    document.getElementById('odoDisplay').textContent = val.toLocaleString();
+    var today = new Date();
+    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+    document.getElementById('odoAsOf').textContent = 'km · as of ' + today.toLocaleDateString('en-US', opts);
+    input.value = '';
+  }
+
+  var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>';
+
+  function deleteRow(btn) {
+    var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row');
+    if (!row) return;
+    var voided = row.classList.toggle('voided');
+    if (voided) {
+      btn.innerHTML = 'Undo';
+      btn.classList.add('is-undo');
+      btn.title = 'Restore entry';
+    } else {
+      btn.innerHTML = TRASH_ICON;
+      btn.classList.remove('is-undo');
+      btn.title = 'Remove';
+    }
+    recalcCostTotals();
+    recalcFuelStats();
+  }
+
+  function fmtMoney(n) {
+    n = Number(n) || 0;
+    var hasCents = Math.round(n * 100) % 100 !== 0;
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: 2 });
+  }
+
+  function costTagHtml(cost, emptyLabel) {
+    var n = Number(cost);
+    if (n && n > 0) return '<span class="cost-tag">' + fmtMoney(n) + '</span>';
+    return '<span class="cost-tag none">' + (emptyLabel || 'no cost logged') + '</span>';
+  }
+
+  /* ---------- Ownership & Costs (added) ---------- */
+  var ownershipData = { purchasePrice: null, dateBought: null };
+
+  function openOwnershipForm() {
+    document.getElementById('purchasePriceInput').value = ownershipData.purchasePrice || '';
+    document.getElementById('dateBoughtInput').value = ownershipData.dateBought || '';
+    document.getElementById('ownershipSheet').classList.add('open');
+  }
+
+  function submitOwnershipForm(e) {
+    e.preventDefault();
+    var price = document.getElementById('purchasePriceInput').value;
+    var date = document.getElementById('dateBoughtInput').value;
+    ownershipData.purchasePrice = price ? Number(price) : null;
+    ownershipData.dateBought = date || null;
+
+    document.getElementById('purchasePriceDisplay').textContent = ownershipData.purchasePrice ? fmtMoney(ownershipData.purchasePrice) : 'not set';
+    document.getElementById('purchasePriceDisplay').classList.toggle('muted', !ownershipData.purchasePrice);
+    document.getElementById('dateBoughtDisplay').textContent = ownershipData.dateBought ? formatDateShort(ownershipData.dateBought) : 'not set';
+    document.getElementById('dateBoughtDisplay').classList.toggle('muted', !ownershipData.dateBought);
+
+    recalcCostTotals();
+    closeSheet('ownershipSheet');
+  }
+
+  function recalcCostTotals() {
+    var serviceSpent = 0, modSpent = 0, wishlist = 0;
+    document.querySelectorAll('.activity-row:not(.voided)').forEach(function (row) {
+      serviceSpent += Number(row.getAttribute('data-cost')) || 0;
+    });
+    document.querySelectorAll('.mod-row:not(.voided)').forEach(function (row) {
+      var cost = Number(row.getAttribute('data-cost')) || 0;
+      if (row.getAttribute('data-status') === 'installed') { modSpent += cost; }
+      else { wishlist += cost; }
+    });
+
+    document.getElementById('statServiceSpent').textContent = fmtMoney(serviceSpent);
+    document.getElementById('statModSpent').textContent = fmtMoney(modSpent);
+    document.getElementById('statWishlist').textContent = fmtMoney(wishlist);
+
+    var totalInvested = (ownershipData.purchasePrice || 0) + serviceSpent + modSpent;
+    document.getElementById('totalInvestedDisplay').textContent = fmtMoney(totalInvested);
+    document.getElementById('totalInvestedDisplay').classList.toggle('muted', totalInvested === 0);
+
+    if (ownershipData.dateBought) {
+      var boughtDate = new Date(ownershipData.dateBought + 'T00:00:00');
+      var years = (Date.now() - boughtDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      var wholeYears = Math.floor(years);
+      var months = Math.round((years - wholeYears) * 12);
+      var ownedForText = (wholeYears > 0 ? wholeYears + ' yr' + (wholeYears === 1 ? '' : 's') : '') +
+        (months > 0 ? ' ' + months + ' mo' : (wholeYears === 0 ? 'under 1 mo' : ''));
+      document.getElementById('statOwnedFor').textContent = ownedForText || '—';
+      var perYear = years >= 0.08 ? totalInvested / years : totalInvested;
+      document.getElementById('costPerYearDisplay').textContent = fmtMoney(perYear) + ' / yr';
+      document.getElementById('costPerYearDisplay').classList.remove('muted');
+    } else {
+      document.getElementById('statOwnedFor').textContent = '—';
+      document.getElementById('costPerYearDisplay').textContent = '—';
+      document.getElementById('costPerYearDisplay').classList.add('muted');
+    }
+  }
+
+  /* ---------- SGI Registration & Plates (added) ---------- */
+  var sgiData = null; // { type: 'annual'|'monthly', amount, date }
+
+  function openSgiForm() {
+    if (sgiData) {
+      if (sgiData.type === 'monthly') {
+        document.getElementById('sgiTypeMonthly').checked = true;
+        document.getElementById('sgiMonthlyAmount').value = sgiData.amount;
+        document.getElementById('sgiNextDebit').value = sgiData.date;
+      } else {
+        document.getElementById('sgiTypeAnnual').checked = true;
+        document.getElementById('sgiAnnualAmount').value = sgiData.amount;
+        document.getElementById('sgiRenewalDate').value = sgiData.date;
+      }
+      toggleSgiType();
+    }
+    document.getElementById('sgiSheet').classList.add('open');
+  }
+
+  function toggleSgiType() {
+    var monthly = document.getElementById('sgiTypeMonthly').checked;
+    document.getElementById('sgiAnnualFields').style.display = monthly ? 'none' : 'grid';
+    document.getElementById('sgiMonthlyFields').style.display = monthly ? 'grid' : 'none';
+  }
+
+  function submitSgiForm(e) {
+    e.preventDefault();
+    var monthly = document.getElementById('sgiTypeMonthly').checked;
+    if (monthly) {
+      sgiData = {
+        type: 'monthly',
+        amount: Number(document.getElementById('sgiMonthlyAmount').value) || 0,
+        date: document.getElementById('sgiNextDebit').value
+      };
+    } else {
+      sgiData = {
+        type: 'annual',
+        amount: Number(document.getElementById('sgiAnnualAmount').value) || 0,
+        date: document.getElementById('sgiRenewalDate').value
+      };
+    }
+    renderSgiCard();
+    closeSheet('sgiSheet');
+  }
+
+  function renderSgiCard() {
+    var headline = document.getElementById('sgiHeadline');
+    var sub = document.getElementById('sgiSub');
+    var pill = document.getElementById('sgiStatusPill');
+    if (!sgiData || !sgiData.date) {
+      headline.textContent = 'Not set up yet';
+      sub.textContent = 'Choose Annual (paid in full) or Monthly pre-authorized debit, so renewals show up here.';
+      pill.className = 'status-pill none';
+      pill.textContent = 'Not set';
+      return;
+    }
+    var label = sgiData.type === 'monthly' ? 'Monthly PAD' : 'Annual (paid in full)';
+    headline.innerHTML = label + ' &middot; ' + fmtMoney(sgiData.amount) + (sgiData.type === 'monthly' ? ' / mo' : ' / yr');
+    var dueDate = new Date(sgiData.date + 'T00:00:00');
+    var daysLeft = Math.round((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    var dueLabel = (sgiData.type === 'monthly' ? 'Next debit: ' : 'Renews: ') + formatDateShort(sgiData.date);
+    sub.textContent = dueLabel + (daysLeft >= 0 ? ' (' + daysLeft + ' days)' : ' (' + Math.abs(daysLeft) + ' days overdue)');
+    if (daysLeft < 0) { pill.className = 'status-pill overdue'; pill.textContent = 'Overdue'; }
+    else if (daysLeft <= 30) { pill.className = 'status-pill soon'; pill.textContent = 'Due soon'; }
+    else { pill.className = 'status-pill ok'; pill.textContent = 'On track'; }
+  }
+
+  /* ---------- Fuel & Mileage (added) ---------- */
+  var fuelLog = []; // { date, odo, liters, cost }
+
+  function openFuelForm() {
+    document.getElementById('fuelSheet').classList.add('open');
+  }
+
+  function submitFuelForm(e) {
+    e.preventDefault();
+    var date = document.getElementById('fuelDate').value;
+    var odo = document.getElementById('fuelOdo').value;
+    var liters = Number(document.getElementById('fuelLiters').value) || 0;
+    var cost = Number(document.getElementById('fuelCost').value) || 0;
+    var perL = liters > 0 ? cost / liters : 0;
+
+    fuelLog.push({ date: date, odo: odo, liters: liters, cost: cost });
+
+    var row = document.createElement('div');
+    row.className = 'fuel-row';
+    row.setAttribute('data-cost', cost);
+    row.setAttribute('data-liters', liters);
+    row.setAttribute('data-date', date);
+    row.innerHTML =
+      '<div><span class="col-label">Date</span><span class="col-value">' + formatDateShort(date) + '</span></div>' +
+      '<div><span class="col-label">Odometer</span><span class="col-value">' + (odo ? Number(odo).toLocaleString() + ' km' : '—') + '</span></div>' +
+      '<div><span class="col-label">Liters</span><span class="col-value">' + (liters ? liters.toLocaleString() + ' L' : '—') + '</span></div>' +
+      '<div><span class="col-label">Cost</span><span class="col-value">' + fmtMoney(cost) + (perL ? ' &middot; ' + perL.toFixed(2) + '/L' : '') + '</span></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+
+    var list = document.getElementById('fuelList');
+    list.insertBefore(row, list.firstChild);
+    list.style.display = 'block';
+    document.getElementById('fuelEmpty').style.display = 'none';
+
+    recalcFuelStats();
+    closeSheet('fuelSheet');
+    document.getElementById('fuelDate').value = '';
+    document.getElementById('fuelOdo').value = '';
+    document.getElementById('fuelLiters').value = '';
+    document.getElementById('fuelCost').value = '';
+  }
+
+  function recalcFuelStats() {
+    var now = new Date();
+    var weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    var monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+    var yearAgo = new Date(now.getFullYear(), 0, 1);
+
+    var week = 0, month = 0, year = 0, totalCost = 0, totalLiters = 0;
+
+    document.querySelectorAll('.fuel-row:not(.voided)').forEach(function (row) {
+      var cost = Number(row.getAttribute('data-cost')) || 0;
+      var liters = Number(row.getAttribute('data-liters')) || 0;
+      var dateStr = row.getAttribute('data-date');
+      totalCost += cost;
+      totalLiters += liters;
+      if (!dateStr) return;
+      var d = new Date(dateStr + 'T00:00:00');
+      if (d >= weekAgo) week += cost;
+      if (d >= monthAgo) month += cost;
+      if (d >= yearAgo) year += cost;
+    });
+
+    document.getElementById('fuelStatWeek').textContent = fmtMoney(week);
+    document.getElementById('fuelStatMonth').textContent = fmtMoney(month);
+    document.getElementById('fuelStatYear').textContent = fmtMoney(year);
+    document.getElementById('fuelStatAvgPerL').textContent = totalLiters > 0 ? '$' + (totalCost / totalLiters).toFixed(2) : '—';
+  }
+
+  function formatDateShort(dateStr) {
+    if (!dateStr) return 'no date';
+    var d = new Date(dateStr + 'T00:00:00');
+    var opts = { month: 'short', day: 'numeric' };
+    return d.toLocaleDateString('en-US', opts) + " '" + String(d.getFullYear()).slice(-2);
+  }
+
+  function submitEntryForm(e) {
+    e.preventDefault();
+    var category = document.getElementById('entryCategory').value || 'Other';
+    var date = document.getElementById('entryDate').value;
+    var odo = document.getElementById('entryOdo').value;
+    var desc = document.getElementById('entryDesc').value || category;
+    var cost = document.getElementById('entryCost').value;
+
+    var row = document.createElement('div');
+    row.className = 'activity-row';
+    row.setAttribute('data-cost', Number(cost) || 0);
+    row.innerHTML =
+      '<div class="activity-row-inner">' +
+        '<div class="activity-left">' +
+          catChipHtml(category, 'sm') +
+          '<span class="activity-date">' + formatDateShort(date) + '</span>' +
+          '<span class="activity-cat">' + category + '</span>' +
+          '<span class="activity-desc">' + desc + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; gap:10px;">' +
+          '<span class="activity-odo">' + (odo ? Number(odo).toLocaleString() + ' km' : 'no odo') + '</span>' +
+          costTagHtml(cost) +
+          '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+        '</div>' +
+      '</div>';
+
+    var list = document.getElementById('activityList');
+    list.insertBefore(row, list.firstChild);
+
+    recalcCostTotals();
+    closeSheet('addSheet');
+    document.getElementById('formView').reset();
+  }
+
+  function submitModForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('modName').value || 'Untitled modification';
+    var category = document.getElementById('modCategory').value;
+    var installed = document.getElementById('modStatusInstalled').checked;
+    var details = document.getElementById('modDetails').value || 'No details entered';
+    var cost = document.getElementById('modCost').value;
+
+    if (currentEditingModRow) {
+      currentEditingModRow.querySelector('.item-name').textContent = name;
+      currentEditingModRow.querySelector('.item-sub').textContent = category;
+      currentEditingModRow.querySelector('.col-value').textContent = details;
+      var badge = currentEditingModRow.querySelector('.mod-badge');
+      badge.textContent = installed ? 'Installed' : 'Planned';
+      badge.className = 'mod-badge ' + (installed ? 'installed' : 'planned');
+      currentEditingModRow.setAttribute('data-cost', Number(cost) || 0);
+      currentEditingModRow.setAttribute('data-status', installed ? 'installed' : 'planned');
+      var costTag = currentEditingModRow.querySelector('.cost-tag');
+      if (costTag) { costTag.outerHTML = costTagHtml(cost, installed ? 'no cost logged' : 'no estimate'); }
+    } else {
+      var row = document.createElement('div');
+      row.className = 'mod-row';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('data-cost', Number(cost) || 0);
+      row.setAttribute('data-status', installed ? 'installed' : 'planned');
+      row.innerHTML =
+        '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + category + '</div></div></div>' +
+        '<div><span class="col-label">Details</span><span class="col-value">' + details + '</span></div>' +
+        '<div style="display:flex; align-items:center; gap:6px;">' +
+          costTagHtml(cost, installed ? 'no cost logged' : 'no estimate') +
+          '<span class="mod-badge ' + (installed ? 'installed' : 'planned') + '">' + (installed ? 'Installed' : 'Planned') + '</span>' +
+          '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+        '</div>';
+      row.onclick = function () { openModForm(name, row); };
+      document.getElementById('modList').appendChild(row);
+    }
+
+    recalcCostTotals();
+    closeSheet('modSheet');
+  }
+
+  function deleteFromForm() {
+    if (currentEditingModRow) {
+      currentEditingModRow.classList.add('voided');
+      var delBtn = currentEditingModRow.querySelector('.row-delete-btn');
+      delBtn.innerHTML = 'Undo';
+      delBtn.classList.add('is-undo');
+    }
+    closeSheet('modSheet');
+  }
+
+  function submitPartForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('partName').value || 'Unnamed part';
+    var relatedMod = document.getElementById('partRelatedMod').value;
+    var date = document.getElementById('partDate').value;
+    var odo = document.getElementById('partOdo').value;
+    var condition = document.getElementById('partCondition').value;
+    var location = document.getElementById('partLocation').value || 'not specified';
+
+    var row = document.createElement('div');
+    row.className = 'part-row';
+    row.innerHTML =
+      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">Removed ' + formatDateShort(date) + (odo ? ' · ' + Number(odo).toLocaleString() + ' km' : '') + ' · ' + relatedMod + '</div></div></div>' +
+      '<div><span class="col-label">Condition</span><span class="col-value">' + condition + '</span></div>' +
+      '<div><span class="col-label">Stored</span><span class="col-value">' + location + '</span></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+
+    document.getElementById('partsList').appendChild(row);
+    document.getElementById('partsList').style.display = 'block';
+    document.getElementById('partsEmpty').style.display = 'none';
+
+    closeSheet('partSheet');
+  }
+
+  function submitTaskForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('taskName').value || 'Untitled task';
+    var km = document.getElementById('taskKm').value;
+    var months = document.getElementById('taskMonths').value;
+    var group = document.getElementById('taskGroup').value;
+    var interval = [km ? Number(km).toLocaleString() + ' km' : null, months ? months + ' mo' : null].filter(Boolean).join(' / ') || 'no interval set';
+
+    var row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML =
+      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + group + ' &middot; ' + interval + ' &middot; custom task, no record yet</div></div></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+
+    document.getElementById('customTaskList').appendChild(row);
+    closeSheet('scheduleTaskSheet');
+  }
+
+  recalcCostTotals();
+  recalcFuelStats();
+  renderSgiCard();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var t=localStorage.getItem('garageTheme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<title>2012 Ram 1500 Sport — Garage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F12;
+    --surface: #16181C;
+    --surface-raised: #1D2025;
+    --border: #292C32;
+    --border-soft: #202329;
+    --text: #EDEBE6;
+    --text-muted: #8B8E95;
+    --text-faint: #55585F;
+
+    --accent: #B2483A; /* this vehicle's identity accent */
+
+    --status-ok: #6FBF73;
+    --status-ok-dim: rgba(111, 191, 115, 0.10);
+    --status-soon: #E0A83E;
+    --status-soon-dim: rgba(224, 168, 62, 0.10);
+    --status-overdue: #E0554A;
+    --status-overdue-dim: rgba(224, 85, 74, 0.10);
+    --status-none: #55585F;
+    --status-none-dim: rgba(85, 88, 95, 0.08);
+  }
+
+  /* checker pattern (photo placeholders) — themed */
+  :root { --checker: #191B1F; }
+
+  /* maintenance-category identity colors — used for the small icon chips
+     on schedule/activity/mod rows. Independent of status (ok/soon/overdue)
+     colors, which continue to mean urgency, not category. */
+  :root {
+    --cat-oil: #D98E3A;      --cat-oil-dim: rgba(217,142,58,0.16);
+    --cat-filter: #4FA6A6;   --cat-filter-dim: rgba(79,166,166,0.16);
+    --cat-fluid: #4F8FD9;    --cat-fluid-dim: rgba(79,143,217,0.16);
+    --cat-spark: #C9A227;    --cat-spark-dim: rgba(201,162,39,0.18);
+    --cat-battery: #D9C23A;  --cat-battery-dim: rgba(217,194,58,0.18);
+    --cat-wheel: #7A87C9;    --cat-wheel-dim: rgba(122,135,201,0.16);
+    --cat-general: #9295A0;  --cat-general-dim: rgba(146,149,160,0.15);
+  }
+
+  /* ---------- light theme ---------- */
+  [data-theme="light"] {
+    --bg: #F3F1EA;
+    --surface: #FFFFFF;
+    --surface-raised: #F6F4EE;
+    --border: #DEDAD0;
+    --border-soft: #E9E6DE;
+    --text: #1E2024;
+    --text-muted: #5B5D63;
+    --text-faint: #93958E;
+    --checker: #EAE7DE;
+
+    --status-ok-dim: rgba(111, 191, 115, 0.18);
+    --status-soon-dim: rgba(224, 168, 62, 0.20);
+    --status-overdue-dim: rgba(224, 85, 74, 0.18);
+    --status-none-dim: rgba(85, 88, 95, 0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 24px 120px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-faint);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .back-link:hover { color: var(--text-muted); }
+
+  /* ---------- vehicle header ---------- */
+  .vehicle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .vehicle-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: 0.01em;
+    margin: 0 0 4px;
+  }
+
+  .vehicle-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .vehicle-vin {
+    color: var(--text-faint);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    margin: 6px 0 0;
+  }
+
+  .odo-readout {
+    text-align: right;
+  }
+
+  .odo-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    color: var(--text-faint);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .odo-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
+  /* ---------- hero photo ---------- */
+  .hero-photo {
+    aspect-ratio: 21 / 9;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--surface-raised),
+        var(--surface-raised) 10px,
+        var(--checker) 10px,
+        var(--checker) 20px
+      );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .hero-photo svg {
+    width: 88px;
+    height: 88px;
+    opacity: 0.22;
+    stroke: var(--text);
+  }
+
+  .hero-photo .add-photo {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- quick stats ---------- */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  .qs-item {
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+
+  .qs-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .qs-value.muted {
+    color: var(--text-faint);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+  }
+
+  .qs-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .quick-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- section headings ---------- */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .section-note {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- schedule list (custom tasks) ---------- */
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .status-pill.ok { background: var(--status-ok-dim); color: var(--status-ok); }
+  .status-pill.overdue { background: var(--status-overdue-dim); color: var(--status-overdue); }
+  .status-pill.none { background: var(--status-none-dim); color: var(--status-none); }
+
+  /* ---------- empty-state blocks ---------- */
+  .empty-state {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .empty-state p {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin: 0 0 12px;
+    line-height: 1.6;
+  }
+  .empty-state p:last-child { margin-bottom: 0; }
+
+  /* ---------- seasonal / as-needed ---------- */
+  .seasonal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .seasonal-row {
+    background: var(--surface);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .seasonal-row .item-name { font-size: 14px; font-weight: 500; }
+  .seasonal-row .item-detail {
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: right;
+  }
+
+  /* ---------- recent activity ---------- */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activity-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+
+  .activity-row:last-child { border-bottom: none; }
+
+  .activity-left { display: flex; gap: 10px; align-items: baseline; }
+  .activity-date { color: var(--text-faint); font-size: 12px; min-width: 72px; }
+  .activity-cat { color: var(--text-muted); font-size: 12px; }
+  .activity-desc { color: var(--text); }
+  .activity-odo { color: var(--text-faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- floating add-entry action ---------- */
+  .fab {
+    position: fixed;
+    bottom: 26px;
+    right: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    border-radius: 100px;
+    padding: 14px 20px 14px 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .fab:hover { filter: brightness(1.08); }
+  .fab svg { width: 18px; height: 18px; stroke: #0D0F12; stroke-width: 2.2; }
+
+  /* ---------- add-entry category sheet ---------- */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .sheet-backdrop.open { display: flex; }
+
+  .sheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 20px 20px 28px;
+  }
+
+  .sheet-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+
+  .sheet-sub {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin: 0 0 16px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .category-chip {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .category-chip:hover { border-color: var(--accent); }
+
+  .sheet-close {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* ---------- clickable rows ---------- */
+  .mod-row {
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .mod-row:hover {
+    background: var(--surface-raised);
+  }
+  .mod-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  /* ---------- entry form (inside sheets) ---------- */
+  .form-field { margin-bottom: 14px; }
+  .form-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-bottom: 5px;
+    letter-spacing: 0.02em;
+  }
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    width: 100%;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-field.locked input,
+  .form-field.locked select {
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .status-toggle { display: flex; gap: 8px; }
+  .status-toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: var(--surface-raised);
+  }
+  .status-toggle input { display: none; width: auto; }
+  .status-toggle input:checked + span { color: var(--text); }
+  .status-toggle label:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(110,147,173,0.12);
+  }
+
+  /* ---------- section add button ---------- */
+  .section-add-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+  .section-add-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ---------- modifications ---------- */
+  .mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .mod-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .mod-row .item-name { font-weight: 500; font-size: 14px; }
+  .mod-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .mod-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .mod-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .mod-badge.installed { background: rgba(111,191,115,0.10); color: var(--status-ok); }
+  .mod-badge.planned { background: rgba(224,168,62,0.10); color: var(--status-soon); }
+
+  @media (max-width: 640px) {
+    .mod-row { grid-template-columns: 1fr; }
+    .mod-badge { justify-self: flex-start; margin-top: 4px; }
+  }
+
+  /* ---------- quick mileage entry ---------- */
+  .quick-mileage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    justify-content: flex-end;
+  }
+  .quick-mileage input {
+    width: 110px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .quick-mileage input:focus { outline: none; border-color: var(--accent); }
+  .quick-mileage button {
+    background: var(--accent);
+    color: #0D0F12;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .quick-mileage-note {
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* ---------- toggle switch ---------- */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: rgba(110,147,173,0.35); }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(16px);
+    background: var(--accent);
+  }
+  .toggle-label-text { font-size: 13px; color: var(--text-muted); }
+
+  /* ---------- delete / undo ---------- */
+  .row-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .row-delete-btn:hover { color: var(--status-overdue); background: var(--status-overdue-dim); }
+  .row-delete-btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 1.6; }
+  .row-delete-btn.is-undo {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+  }
+  .row-delete-btn.is-undo:hover { background: rgba(110,147,173,0.12); }
+
+  .activity-row.voided,
+  .mod-row.voided,
+  .part-row.voided,
+  .task-row.voided {
+    opacity: 0.45;
+  }
+  .activity-row.voided .activity-desc,
+  .activity-row.voided .activity-cat,
+  .mod-row.voided .item-name,
+  .part-row.voided .item-name,
+  .task-row.voided .item-name {
+    text-decoration: line-through;
+  }
+
+  .activity-row { position: relative; padding-right: 4px; }
+  .activity-row-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .part-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .part-row .item-name { font-weight: 500; font-size: 14px; }
+  .part-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+
+  .task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .task-row .item-name { font-weight: 500; font-size: 14px; }
+  .task-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+
+  /* ---------- theme toggle ---------- */
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--text-faint); color: var(--text); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  [data-theme="light"] .theme-toggle .icon-sun { display: none; }
+  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+  /* ---------- category icon chips (blended in from reference design) ---------- */
+  .row-lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-width: 0;
+  }
+  .cat-chip {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--chip-bg, var(--cat-general-dim));
+    color: var(--chip-color, var(--cat-general));
+  }
+  .cat-chip svg { width: 16px; height: 16px; }
+  .cat-chip.sm { width: 24px; height: 24px; border-radius: 7px; }
+  .cat-chip.sm svg { width: 13px; height: 13px; }
+
+  /* ---------- due-progress bar (blended in from reference design) ---------- */
+  .due-bar-track {
+    height: 5px;
+    border-radius: 100px;
+    background: var(--border-soft);
+    overflow: hidden;
+    margin-top: 9px;
+    max-width: 240px;
+  }
+  .due-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--row-color, var(--status-ok));
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <a class="back-link" href="index.html" style="margin-bottom:0;">&larr; All vehicles</a>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light and dark theme" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+  </div>
+
+  <div class="vehicle-header">
+    <div>
+      <h1 class="vehicle-title">2012 Ram 1500 Sport</h1>
+      <p class="vehicle-sub">5.7L Hemi</p>
+      <p class="vehicle-vin" id="vinLine">VIN not on file</p>
+    </div>
+    <div class="odo-readout">
+      <div class="odo-value" id="odoDisplay">&mdash;</div>
+      <div class="odo-label" id="odoAsOf">odometer not set</div>
+      <div class="quick-mileage">
+        <input type="number" id="odoInput" placeholder="e.g. 145000">
+        <button onclick="updateMileage()">Set</button>
+      </div>
+      <div class="quick-mileage-note">Sets the current odometer &mdash; doesn't log a service entry</div>
+    </div>
+  </div>
+
+  <div class="hero-photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.5 13.5l1.3-4.8A2 2 0 0 1 5.7 7.2h12.6a2 2 0 0 1 1.9 1.5l1.3 4.8"/>
+      <path d="M2.5 13.5h19v3.5a1 1 0 0 1-1 1h-1.2a1 1 0 0 1-1-1v-.8H5.7v.8a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1z"/>
+      <circle cx="6.8" cy="18" r="1.4"/>
+      <circle cx="17.2" cy="18" r="1.4"/>
+    </svg>
+    <span class="add-photo">add photo</span>
+  </div>
+
+  <div class="quick-stats">
+    <div class="qs-item">
+      <div class="qs-value muted">0</div>
+      <div class="qs-label">Service records logged</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value muted">0</div>
+      <div class="qs-label">Oil changes on record</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value muted">0</div>
+      <div class="qs-label">Modifications</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value muted">not set</div>
+      <div class="qs-label">Latest odometer on file</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Scheduled maintenance</h2>
+      <button class="section-add-btn" onclick="openScheduleTaskForm()">+ Add task</button>
+    </div>
+    <div class="empty-state" id="scheduleEmpty">
+      <p>No maintenance schedule set up yet for this vehicle. Add tasks as you learn the factory intervals, or as you go &mdash; each vehicle keeps its own schedule.</p>
+      <button class="section-add-btn" onclick="openScheduleTaskForm()">+ Add task</button>
+    </div>
+    <div class="schedule-list" id="customTaskList" style="margin-top:10px;"></div>
+    <p class="section-note" style="margin-top:8px;">You can also log work with &ldquo;Add entry&rdquo; below before a schedule exists.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">As-needed &amp; seasonal</h2>
+      <span class="section-note">no due-date logic &mdash; informational only</span>
+    </div>
+    <div class="empty-state">
+      <p>Nothing logged yet &mdash; things like alignments, tire swaps, or one-off repairs will show up here once entered.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Tire Sets</h2>
+      <div class="toggle-row">
+        <span class="toggle-label-text">Separate winter rims</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="winterRimsToggle" onchange="toggleTireSets()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div id="tireSetsOn" style="display:none;">
+      <div class="empty-state">
+        <p>No tire sets logged yet.</p>
+        <button class="section-add-btn" onclick="openTireSwapForm()">+ Log tire swap</button>
+      </div>
+    </div>
+
+    <div id="tireSetsOff" class="empty-state">
+      <p>Not tracking separate tire sets for this vehicle yet. Turn this on if it ever gets dedicated winter rims.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Modifications</h2>
+      <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
+    </div>
+    <div class="empty-state" id="modEmpty">
+      <p>No modifications logged yet.</p>
+      <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
+    </div>
+    <div class="mod-list" id="modList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Factory parts storage</h2>
+      <button class="section-add-btn" onclick="openPartForm()">+ Log a part</button>
+    </div>
+    <div class="empty-state" id="partsEmpty">
+      <p>Nothing stored yet. Once a modification comes off, log the removed part here so a restore-to-stock stays possible.</p>
+      <button class="section-add-btn" onclick="openPartForm()">+ Log a part</button>
+    </div>
+    <div id="partsList" style="display:none;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Recent activity</h2>
+    </div>
+    <div class="empty-state" id="activityEmpty">
+      <p>No service entries logged yet. Tap &ldquo;Add entry&rdquo; below to start this vehicle's history.</p>
+    </div>
+    <div class="activity-list" id="activityList"></div>
+  </div>
+
+</div>
+
+<button class="fab" onclick="openCategoryPicker()">
+  <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  Add entry
+</button>
+
+<!-- SERVICE LOG entry sheet: category picker, then the form -->
+<div class="sheet-backdrop" id="addSheet" onclick="if(event.target===this)closeSheet('addSheet')">
+  <div class="sheet">
+
+    <div id="categoryView">
+      <h3 class="sheet-title">Log a new entry</h3>
+      <p class="sheet-sub">Pick a category &mdash; non-standard work still logs fine, it just won't drive a due-date alert.</p>
+      <div class="category-grid">
+        <button class="category-chip" onclick="selectCategory('Oil Change')">Oil Change</button>
+        <button class="category-chip" onclick="selectCategory('Tire Rotation')">Tire Rotation</button>
+        <button class="category-chip" onclick="selectCategory('Brake Service')">Brake Service</button>
+        <button class="category-chip" onclick="selectCategory('Battery')">Battery</button>
+        <button class="category-chip" onclick="selectCategory('Inspection')">Inspection</button>
+        <button class="category-chip" onclick="selectCategory('Other / custom')">Other / custom&hellip;</button>
+      </div>
+      <button class="sheet-close" onclick="closeSheet('addSheet')">Cancel</button>
+    </div>
+
+    <form id="formView" style="display:none;" onsubmit="submitEntryForm(event)">
+      <h3 class="sheet-title" id="formTitle">Log entry</h3>
+      <p class="sheet-sub">Preview form &mdash; not yet wired to a backend.</p>
+
+      <div class="form-field locked">
+        <label>Category</label>
+        <input type="text" id="entryCategory" readonly>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" id="entryDate">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" id="entryOdo" placeholder="e.g. 145000">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Description</label>
+        <input type="text" id="entryDesc" placeholder="e.g. Engine oil & filter change">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Cost ($)</label>
+          <input type="number" step="0.01" placeholder="optional">
+        </div>
+        <div class="form-field">
+          <label>Performed by</label>
+          <input type="text" placeholder="e.g. self, shop name">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('addSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save entry</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- MODIFICATIONS entry sheet -->
+<div class="sheet-backdrop" id="modSheet" onclick="if(event.target===this)closeSheet('modSheet')">
+  <div class="sheet">
+    <form onsubmit="submitModForm(event)">
+      <h3 class="sheet-title" id="modFormTitle">Log a modification</h3>
+      <p class="sheet-sub">Preview form &mdash; not yet wired to a backend.</p>
+
+      <div class="form-field">
+        <label>Modification</label>
+        <input type="text" id="modName" placeholder="e.g. Cold air intake">
+      </div>
+      <div class="form-field">
+        <label>Category</label>
+        <select id="modCategory">
+          <option>Intake</option>
+          <option>Exhaust</option>
+          <option>ECU/Tune</option>
+          <option>Suspension</option>
+          <option>Wheels/Tires</option>
+          <option>Brakes</option>
+          <option>Cosmetic</option>
+          <option>Lighting</option>
+          <option>Audio</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <div class="status-toggle">
+          <label><input type="radio" name="modStatus" id="modStatusPlanned" checked><span>Planned</span></label>
+          <label><input type="radio" name="modStatus" id="modStatusInstalled"><span>Installed</span></label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date (if installed)</label>
+          <input type="date">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" placeholder="optional">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Details / specs</label>
+        <textarea id="modDetails" placeholder="e.g. brand/part, spec notes"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Cost ($)</label>
+          <input type="number" step="0.01" placeholder="optional">
+        </div>
+        <div class="form-field">
+          <label>Installed by</label>
+          <input type="text" placeholder="e.g. shop name, self">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('modSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save modification</button>
+      </div>
+      <button type="button" class="row-delete-btn" id="modDeleteBtn" style="display:none; width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="deleteFromForm()">Remove this modification</button>
+    </form>
+  </div>
+</div>
+
+<!-- FACTORY PARTS STORAGE entry sheet -->
+<div class="sheet-backdrop" id="partSheet" onclick="if(event.target===this)closeSheet('partSheet')">
+  <div class="sheet">
+    <form onsubmit="submitPartForm(event)">
+      <h3 class="sheet-title">Log a factory part</h3>
+      <p class="sheet-sub">For OEM parts removed during a modification and kept for a possible restore-to-stock.</p>
+
+      <div class="form-field">
+        <label>Part</label>
+        <input type="text" id="partName" placeholder="e.g. Factory exhaust">
+      </div>
+      <div class="form-field">
+        <label>Related modification</label>
+        <input type="text" id="partRelatedMod" placeholder="e.g. Aftermarket exhaust, or leave blank">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date removed</label>
+          <input type="date" id="partDate">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" id="partOdo" placeholder="optional">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Condition</label>
+          <select id="partCondition">
+            <option>New / like new</option>
+            <option>Good</option>
+            <option>Fair</option>
+            <option>Poor</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Storage location</label>
+          <input type="text" id="partLocation" placeholder="e.g. garage shelf">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('partSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save part</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TIRE SWAP entry sheet -->
+<div class="sheet-backdrop" id="tireSheet" onclick="if(event.target===this)closeSheet('tireSheet')">
+  <div class="sheet">
+    <form onsubmit="event.preventDefault(); closeSheet('tireSheet');">
+      <h3 class="sheet-title">Log a tire swap</h3>
+      <p class="sheet-sub">Preview form &mdash; not yet wired to a backend.</p>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date">
+        </div>
+        <div class="form-field">
+          <label>Odometer (km)</label>
+          <input type="number" placeholder="e.g. 150000">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Set now going on</label>
+        <select>
+          <option>Winter Set</option>
+          <option>Summer Set</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Tread depth of set coming off (mm)</label>
+        <input type="number" step="0.1" placeholder="optional">
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('tireSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save swap</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD SCHEDULED TASK sheet -->
+<div class="sheet-backdrop" id="scheduleTaskSheet" onclick="if(event.target===this)closeSheet('scheduleTaskSheet')">
+  <div class="sheet">
+    <form onsubmit="submitTaskForm(event)">
+      <h3 class="sheet-title">Add a scheduled task</h3>
+      <p class="sheet-sub">Defines a new recurring item &mdash; separate from logging work that's already done.</p>
+
+      <div class="form-field">
+        <label>Task name</label>
+        <input type="text" id="taskName" placeholder="e.g. Oil Change">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Interval (km)</label>
+          <input type="number" id="taskKm" placeholder="leave blank if time-only">
+        </div>
+        <div class="form-field">
+          <label>Interval (months)</label>
+          <input type="number" id="taskMonths" placeholder="leave blank if km-only">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Group</label>
+          <select id="taskGroup">
+            <option>Standard</option>
+            <option>Major</option>
+            <option>Additional</option>
+            <option>Recommended</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>First service (optional)</label>
+          <input type="text" placeholder="e.g. 20,000 km">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes / source</label>
+        <textarea placeholder="optional &mdash; why this interval, where it came from"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('scheduleTaskSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Add to schedule</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var isLight = html.getAttribute('data-theme') === 'light';
+    if (isLight) { html.removeAttribute('data-theme'); try{localStorage.setItem('garageTheme','dark');}catch(e){} }
+    else { html.setAttribute('data-theme', 'light'); try{localStorage.setItem('garageTheme','light');}catch(e){} }
+  }
+
+  var CAT_ICONS = {
+    oil: '<path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/>',
+    filter: '<path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/>',
+    fluid: '<path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/>',
+    spark: '<path d="M13 2 5 13.5h5.3L9.2 22l9-12.5h-5.3z"/>',
+    battery: '<rect x="3" y="7" width="15" height="11" rx="2"/><line x1="20" y1="10.3" x2="20" y2="14.7"/><line x1="7.5" y1="10" x2="7.5" y2="15"/>',
+    wheel: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/>',
+    general: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>'
+  };
+  function catForName(name) {
+    var n = (name || '').toLowerCase();
+    if (n.indexOf('oil') !== -1) return 'oil';
+    if (n.indexOf('filter') !== -1 || n.indexOf('snow screen') !== -1) return 'filter';
+    if (n.indexOf('fluid') !== -1 || n.indexOf('coolant') !== -1 || n.indexOf('washer') !== -1) return 'fluid';
+    if (n.indexOf('spark') !== -1) return 'spark';
+    if (n.indexOf('battery') !== -1) return 'battery';
+    if (n.indexOf('tire') !== -1 || n.indexOf('tpms') !== -1 || n.indexOf('alignment') !== -1 || n.indexOf('brake disc') !== -1 || n.indexOf('brake system') !== -1 || n.indexOf('wheel bearing') !== -1 || n.indexOf('rim') !== -1) return 'wheel';
+    return 'general';
+  }
+  function catChipHtml(name, sizeClass) {
+    var cat = catForName(name);
+    return '<span class="cat-chip ' + (sizeClass || '') + '" style="--chip-color:var(--cat-' + cat + ');--chip-bg:var(--cat-' + cat + '-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + CAT_ICONS[cat] + '</svg></span>';
+  }
+
+  function openCategoryPicker() {
+    document.getElementById('categoryView').style.display = 'block';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('addSheet').classList.add('open');
+  }
+  function selectCategory(name) {
+    document.getElementById('entryCategory').value = name;
+    document.getElementById('formTitle').textContent = 'Log: ' + name;
+    document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+  }
+  var currentEditingModRow = null;
+
+  function openModForm(name, rowEl) {
+    currentEditingModRow = rowEl || null;
+    document.getElementById('modFormTitle').textContent = name ? 'Log: ' + name : 'Log a modification';
+    document.getElementById('modName').value = name || '';
+    document.getElementById('modDeleteBtn').style.display = rowEl ? 'flex' : 'none';
+    document.getElementById('modSheet').classList.add('open');
+  }
+  function openPartForm() {
+    document.getElementById('partSheet').classList.add('open');
+  }
+  function closeSheet(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  function openTireSwapForm() {
+    document.getElementById('tireSheet').classList.add('open');
+  }
+  function openScheduleTaskForm() {
+    document.getElementById('scheduleTaskSheet').classList.add('open');
+  }
+  function toggleTireSets() {
+    var on = document.getElementById('winterRimsToggle').checked;
+    document.getElementById('tireSetsOn').style.display = on ? 'block' : 'none';
+    document.getElementById('tireSetsOff').style.display = on ? 'none' : 'block';
+  }
+  function updateMileage() {
+    var input = document.getElementById('odoInput');
+    var val = parseInt(input.value, 10);
+    if (!val || val <= 0) return;
+    document.getElementById('odoDisplay').textContent = val.toLocaleString();
+    document.getElementById('odoDisplay').style.color = 'var(--text)';
+    var today = new Date();
+    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+    document.getElementById('odoAsOf').textContent = 'km · as of ' + today.toLocaleDateString('en-US', opts);
+    input.value = '';
+  }
+
+  var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>';
+
+  function deleteRow(btn) {
+    var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row');
+    if (!row) return;
+    var voided = row.classList.toggle('voided');
+    if (voided) {
+      btn.innerHTML = 'Undo';
+      btn.classList.add('is-undo');
+      btn.title = 'Restore entry';
+    } else {
+      btn.innerHTML = TRASH_ICON;
+      btn.classList.remove('is-undo');
+      btn.title = 'Remove';
+    }
+  }
+
+  function formatDateShort(dateStr) {
+    if (!dateStr) return 'no date';
+    var d = new Date(dateStr + 'T00:00:00');
+    var opts = { month: 'short', day: 'numeric' };
+    return d.toLocaleDateString('en-US', opts) + " '" + String(d.getFullYear()).slice(-2);
+  }
+
+  function submitEntryForm(e) {
+    e.preventDefault();
+    var category = document.getElementById('entryCategory').value || 'Other';
+    var date = document.getElementById('entryDate').value;
+    var odo = document.getElementById('entryOdo').value;
+    var desc = document.getElementById('entryDesc').value || category;
+
+    var row = document.createElement('div');
+    row.className = 'activity-row';
+    row.innerHTML =
+      '<div class="activity-row-inner">' +
+        '<div class="activity-left">' +
+          catChipHtml(category, 'sm') +
+          '<span class="activity-date">' + formatDateShort(date) + '</span>' +
+          '<span class="activity-cat">' + category + '</span>' +
+          '<span class="activity-desc">' + desc + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; gap:10px;">' +
+          '<span class="activity-odo">' + (odo ? Number(odo).toLocaleString() + ' km' : 'no odo') + '</span>' +
+          '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('activityEmpty').style.display = 'none';
+    var list = document.getElementById('activityList');
+    list.insertBefore(row, list.firstChild);
+
+    closeSheet('addSheet');
+    document.getElementById('formView').reset();
+  }
+
+  function submitModForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('modName').value || 'Untitled modification';
+    var category = document.getElementById('modCategory').value;
+    var installed = document.getElementById('modStatusInstalled').checked;
+    var details = document.getElementById('modDetails').value || 'No details entered';
+
+    if (currentEditingModRow) {
+      currentEditingModRow.querySelector('.item-name').textContent = name;
+      currentEditingModRow.querySelector('.item-sub').textContent = category;
+      currentEditingModRow.querySelector('.col-value').textContent = details;
+      var badge = currentEditingModRow.querySelector('.mod-badge');
+      badge.textContent = installed ? 'Installed' : 'Planned';
+      badge.className = 'mod-badge ' + (installed ? 'installed' : 'planned');
+    } else {
+      var row = document.createElement('div');
+      row.className = 'mod-row';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.innerHTML =
+        '<div><div class="item-name">' + name + '</div><div class="item-sub">' + category + '</div></div>' +
+        '<div><span class="col-label">Details</span><span class="col-value">' + details + '</span></div>' +
+        '<div style="display:flex; align-items:center; gap:6px;">' +
+          '<span class="mod-badge ' + (installed ? 'installed' : 'planned') + '">' + (installed ? 'Installed' : 'Planned') + '</span>' +
+          '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+        '</div>';
+      row.onclick = function () { openModForm(name, row); };
+      document.getElementById('modEmpty').style.display = 'none';
+      document.getElementById('modList').appendChild(row);
+    }
+
+    closeSheet('modSheet');
+  }
+
+  function deleteFromForm() {
+    if (currentEditingModRow) {
+      currentEditingModRow.classList.add('voided');
+      var delBtn = currentEditingModRow.querySelector('.row-delete-btn');
+      delBtn.innerHTML = 'Undo';
+      delBtn.classList.add('is-undo');
+    }
+    closeSheet('modSheet');
+  }
+
+  function submitPartForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('partName').value || 'Unnamed part';
+    var relatedMod = document.getElementById('partRelatedMod').value || 'not specified';
+    var date = document.getElementById('partDate').value;
+    var odo = document.getElementById('partOdo').value;
+    var condition = document.getElementById('partCondition').value;
+    var location = document.getElementById('partLocation').value || 'not specified';
+
+    var row = document.createElement('div');
+    row.className = 'part-row';
+    row.innerHTML =
+      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">Removed ' + formatDateShort(date) + (odo ? ' · ' + Number(odo).toLocaleString() + ' km' : '') + ' · ' + relatedMod + '</div></div></div>' +
+      '<div><span class="col-label">Condition</span><span class="col-value">' + condition + '</span></div>' +
+      '<div><span class="col-label">Stored</span><span class="col-value">' + location + '</span></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+
+    document.getElementById('partsList').appendChild(row);
+    document.getElementById('partsList').style.display = 'block';
+    document.getElementById('partsEmpty').style.display = 'none';
+
+    closeSheet('partSheet');
+  }
+
+  function submitTaskForm(e) {
+    e.preventDefault();
+    var name = document.getElementById('taskName').value || 'Untitled task';
+    var km = document.getElementById('taskKm').value;
+    var months = document.getElementById('taskMonths').value;
+    var group = document.getElementById('taskGroup').value;
+    var interval = [km ? Number(km).toLocaleString() + ' km' : null, months ? months + ' mo' : null].filter(Boolean).join(' / ') || 'no interval set';
+
+    var row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML =
+      '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + group + ' &middot; ' + interval + ' &middot; custom task, no record yet</div></div></div>' +
+      '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>';
+
+    document.getElementById('scheduleEmpty').style.display = 'none';
+    document.getElementById('customTaskList').appendChild(row);
+    closeSheet('scheduleTaskSheet');
+  }
+</script>
+
+</body>
+</html>

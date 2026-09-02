@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var isLight = html.getAttribute('data-theme') === 'light';
+    if (isLight) { html.removeAttribute('data-theme'); try{localStorage.setItem('garageTheme','dark');}catch(e){} }
+    else { html.setAttribute('data-theme', 'light'); try{localStorage.setItem('garageTheme','light');}catch(e){} }
+  }
+(function(){try{var t=localStorage.getItem('garageTheme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<title>Garage — Maintenance Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F12;
+    --surface: #16181C;
+    --surface-raised: #1D2025;
+    --border: #292C32;
+    --border-soft: #202329;
+    --text: #EDEBE6;
+    --text-muted: #8B8E95;
+    --text-faint: #55585F;
+
+    /* per-vehicle identity accents — industrial, not brand-marketing colors */
+    --accent-audi: #6E93AD;
+    --accent-tahoe: #C99A4E;
+    --accent-ram: #B2483A;
+    --accent-mazda: #5C8C7B;
+
+    /* status semantics — always mean the same thing, everywhere */
+    --status-ok: #6FBF73;
+    --status-ok-dim: rgba(111, 191, 115, 0.12);
+    --status-soon: #E0A83E;
+    --status-soon-dim: rgba(224, 168, 62, 0.12);
+    --status-overdue: #E0554A;
+    --status-overdue-dim: rgba(224, 85, 74, 0.12);
+    --status-none: #55585F;
+    --status-none-dim: rgba(85, 88, 95, 0.12);
+  }
+
+  /* checker pattern (photo placeholders) — themed */
+  :root { --checker: #191B1F; }
+
+  /* maintenance-category identity colors — used for the small icon chips
+     on schedule/activity/mod rows. Independent of status (ok/soon/overdue)
+     colors, which continue to mean urgency, not category. */
+  :root {
+    --cat-oil: #D98E3A;      --cat-oil-dim: rgba(217,142,58,0.16);
+    --cat-filter: #4FA6A6;   --cat-filter-dim: rgba(79,166,166,0.16);
+    --cat-fluid: #4F8FD9;    --cat-fluid-dim: rgba(79,143,217,0.16);
+    --cat-spark: #C9A227;    --cat-spark-dim: rgba(201,162,39,0.18);
+    --cat-battery: #D9C23A;  --cat-battery-dim: rgba(217,194,58,0.18);
+    --cat-wheel: #7A87C9;    --cat-wheel-dim: rgba(122,135,201,0.16);
+    --cat-general: #9295A0;  --cat-general-dim: rgba(146,149,160,0.15);
+  }
+
+  /* ---------- light theme ---------- */
+  [data-theme="light"] {
+    --bg: #F3F1EA;
+    --surface: #FFFFFF;
+    --surface-raised: #F6F4EE;
+    --border: #DEDAD0;
+    --border-soft: #E9E6DE;
+    --text: #1E2024;
+    --text-muted: #5B5D63;
+    --text-faint: #93958E;
+    --checker: #EAE7DE;
+
+    --status-ok-dim: rgba(111, 191, 115, 0.18);
+    --status-soon-dim: rgba(224, 168, 62, 0.20);
+    --status-overdue-dim: rgba(224, 85, 74, 0.18);
+    --status-none-dim: rgba(85, 88, 95, 0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* subtle garage-floor texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(110,147,173,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(178,72,58,0.04), transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .wordmark {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .wordmark span { color: var(--text-faint); }
+
+  .fleet-stat {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .fleet-stat strong {
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+    .wordmark { font-size: 28px; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card:hover {
+    border-color: var(--card-accent, var(--border));
+    transform: translateY(-2px);
+  }
+
+  .card:focus-visible {
+    outline: 2px solid var(--card-accent, var(--text));
+    outline-offset: 2px;
+  }
+
+  .photo-slot {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--surface-raised),
+        var(--surface-raised) 10px,
+        var(--checker) 10px,
+        var(--checker) 20px
+      );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .photo-slot .car-icon {
+    width: 64px;
+    height: 64px;
+    opacity: 0.28;
+    stroke: var(--text);
+  }
+
+  .photo-slot .add-photo {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.03em;
+  }
+
+  .badge-row {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .wordmark-badge {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--text);
+    padding: 4px 9px;
+    border-radius: 4px;
+  }
+
+  .badge-row img {
+    height: 20px;
+    display: none; /* shown automatically if a real logo file is present */
+  }
+
+  .accent-bar {
+    height: 3px;
+    width: 100%;
+    background: var(--card-accent, var(--border));
+  }
+
+  .card-body {
+    padding: 16px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .vehicle-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .vehicle-trim {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+  }
+
+  .vehicle-vin {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    color: var(--text-faint);
+    margin: 6px 0 0;
+  }
+
+  .vehicle-vin.muted {
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+  }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.03em;
+  }
+
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-value.muted {
+    color: var(--text-faint);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .status-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .status-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .status-row.stacked .status-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 100px;
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .status-pill.ok { background: var(--status-ok-dim); color: var(--status-ok); }
+  .status-pill.soon { background: var(--status-soon-dim); color: var(--status-soon); }
+  .status-pill.overdue { background: var(--status-overdue-dim); color: var(--status-overdue); }
+  .status-pill.none { background: var(--status-none-dim); color: var(--status-none); }
+
+  .entry-count {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* empty-state cards for vehicles with no logged history yet */
+  .card.empty .photo-slot { opacity: 0.6; }
+  .card.empty .stat-value { color: var(--text-faint); }
+  .card.empty .cta {
+    font-size: 12px;
+    color: var(--card-accent);
+    font-weight: 500;
+  }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 20;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- theme toggle ---------- */
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--text-faint); color: var(--text); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  [data-theme="light"] .theme-toggle .icon-sun { display: none; }
+  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+  /* ---------- category icon chips (blended in from reference design) ---------- */
+  .row-lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-width: 0;
+  }
+  .cat-chip {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--chip-bg, var(--cat-general-dim));
+    color: var(--chip-color, var(--cat-general));
+  }
+  .cat-chip svg { width: 16px; height: 16px; }
+  .cat-chip.sm { width: 24px; height: 24px; border-radius: 7px; }
+  .cat-chip.sm svg { width: 13px; height: 13px; }
+
+  /* ---------- due-progress bar (blended in from reference design) ---------- */
+  .due-bar-track {
+    height: 5px;
+    border-radius: 100px;
+    background: var(--border-soft);
+    overflow: hidden;
+    margin-top: 9px;
+    max-width: 240px;
+  }
+  .due-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--row-color, var(--status-ok));
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="wordmark">Garage<span>.</span></div>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light and dark theme" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+    <div class="fleet-stat">
+      <strong id="fleetEntryCount">34</strong> service records logged<br>
+      across 1 of 4 vehicles
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- RAM — no history yet -->
+    <article class="card empty" style="--card-accent: var(--accent-ram);" tabindex="0" role="button" onclick="window.location.href='vehicle-ram.html'" onkeydown="if(event.key==='Enter')window.location.href='vehicle-ram.html'">
+      <div class="photo-slot">
+        <div class="badge-row">
+          <span class="wordmark-badge">Ram</span>
+          <img src="assets/logos/ram.svg" alt="">
+        </div>
+        <svg class="car-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 13.5l1.3-4.8A2 2 0 0 1 5.7 7.2h12.6a2 2 0 0 1 1.9 1.5l1.3 4.8"/>
+          <path d="M2.5 13.5h19v3.5a1 1 0 0 1-1 1h-1.2a1 1 0 0 1-1-1v-.8H5.7v.8a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1z"/>
+          <circle cx="6.8" cy="18" r="1.4"/>
+          <circle cx="17.2" cy="18" r="1.4"/>
+        </svg>
+        <span class="add-photo">add photo</span>
+      </div>
+      <div class="accent-bar"></div>
+      <div class="card-body">
+        <div>
+          <p class="vehicle-name">2012 Ram 1500 Sport</p>
+          <p class="vehicle-trim">5.7L Hemi</p>
+          <p class="vehicle-vin muted">VIN not on file</p>
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <span class="stat-label">Odometer</span>
+            <span class="stat-value muted">not set</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last service</span>
+            <span class="stat-value muted">no entries yet</span>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill none">No schedule set</span>
+          <span class="cta">Log first entry →</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- AUDI — real data -->
+    <article class="card" style="--card-accent: var(--accent-audi);" tabindex="0" role="button" onclick="window.location.href='vehicle-audi.html'" onkeydown="if(event.key==='Enter')window.location.href='vehicle-audi.html'">
+      <div class="photo-slot">
+        <div class="badge-row">
+          <span class="wordmark-badge">Audi</span>
+          <img src="assets/logos/audi.svg" alt="">
+        </div>
+        <svg class="car-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/>
+          <path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+          <circle cx="7" cy="17.5" r="1.4"/>
+          <circle cx="17" cy="17.5" r="1.4"/>
+        </svg>
+        <span class="add-photo">add photo</span>
+      </div>
+      <div class="accent-bar"></div>
+      <div class="card-body">
+        <div>
+          <p class="vehicle-name">2014 Audi A4 S-line</p>
+          <p class="vehicle-trim">2.0T · EA888</p>
+          <p class="vehicle-vin">VIN WAUFFCFL3EN007074</p>
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <span class="stat-label">Odometer</span>
+            <span class="stat-value" id="audiOdometer">146,053 km</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last service</span>
+            <span class="stat-value" id="audiLastService" style="font-size:14px;">Jun 8, 2026</span>
+          </div>
+        </div>
+        <div class="status-row stacked">
+          <div class="status-stack" id="audiStatusStack">
+            <span class="status-pill overdue">Brake Fluid · overdue</span>
+            <span class="status-pill overdue">Spark Plugs · 8,004 km over</span>
+          </div>
+          <div class="status-summary">
+            <span id="audiOkPill"><span class="status-pill ok">Oil · OK to 161,053 km</span></span>
+            <span class="entry-count" id="audiEntryCount">34 entries</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- MAZDA — no history yet -->
+    <article class="card empty" style="--card-accent: var(--accent-mazda);" tabindex="0" role="button" onclick="window.location.href='vehicle-mazda.html'" onkeydown="if(event.key==='Enter')window.location.href='vehicle-mazda.html'">
+      <div class="photo-slot">
+        <div class="badge-row">
+          <span class="wordmark-badge">Mazda</span>
+          <img src="assets/logos/mazda.svg" alt="">
+        </div>
+        <svg class="car-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 14l1.4-4.3A2 2 0 0 1 6.3 8.3h11.4a2 2 0 0 1 1.9 1.4L21 14"/>
+          <path d="M3 14h18v3.2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-.7H6v.7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+          <circle cx="7" cy="18.2" r="1.3"/>
+          <circle cx="17" cy="18.2" r="1.3"/>
+        </svg>
+        <span class="add-photo">add photo</span>
+      </div>
+      <div class="accent-bar"></div>
+      <div class="card-body">
+        <div>
+          <p class="vehicle-name">2018 Mazda CX-3</p>
+          <p class="vehicle-trim">engine TBD</p>
+          <p class="vehicle-vin muted">VIN not on file</p>
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <span class="stat-label">Odometer</span>
+            <span class="stat-value muted">not set</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last service</span>
+            <span class="stat-value muted">no entries yet</span>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill none">No schedule set</span>
+          <span class="cta">Log first entry →</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- TAHOE — no history yet -->
+    <article class="card empty" style="--card-accent: var(--accent-tahoe);" tabindex="0" role="button" onclick="window.location.href='vehicle-tahoe.html'" onkeydown="if(event.key==='Enter')window.location.href='vehicle-tahoe.html'">
+      <div class="photo-slot">
+        <div class="badge-row">
+          <span class="wordmark-badge">Chevrolet</span>
+          <img src="assets/logos/chevrolet.svg" alt="">
+        </div>
+        <svg class="car-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 13.5l1.3-4.8A2 2 0 0 1 5.7 7.2h12.6a2 2 0 0 1 1.9 1.5l1.3 4.8"/>
+          <path d="M2.5 13.5h19v3.5a1 1 0 0 1-1 1h-1.2a1 1 0 0 1-1-1v-.8H5.7v.8a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1z"/>
+          <circle cx="6.8" cy="18" r="1.4"/>
+          <circle cx="17.2" cy="18" r="1.4"/>
+        </svg>
+        <span class="add-photo">add photo</span>
+      </div>
+      <div class="accent-bar"></div>
+      <div class="card-body">
+        <div>
+          <p class="vehicle-name">2021 Chevy Tahoe High Country</p>
+          <p class="vehicle-trim">6.2L gas</p>
+          <p class="vehicle-vin muted">VIN not on file</p>
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <span class="stat-label">Odometer</span>
+            <span class="stat-value muted">not set</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last service</span>
+            <span class="stat-value muted">no entries yet</span>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill none">No schedule set</span>
+          <span class="cta">Log first entry →</span>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <footer>Audi card is live from the Apps Script backend. Ram, Mazda, and Tahoe are still design placeholders — not yet registered vehicles.</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var toastTimer;
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+</script>
+
+<script>
+  // ---------- Backend config ----------
+  // This is the one Apps Script Web App URL, forever (see blueprint §5).
+  var API_BASE = 'https://script.google.com/macros/s/AKfycbwhntNyiO3auQ07e_krvaRSfaQZjlg2w6d-zAvQfNeQudRSOVqWn3gyLIWjP6x8YQiPBQ/exec';
+
+  function apiGet(action, params) {
+    var url = API_BASE + '?action=' + encodeURIComponent(action);
+    if (params) {
+      Object.keys(params).forEach(function (k) {
+        url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+      });
+    }
+    return fetch(url).then(function (res) { return res.json(); });
+  }
+
+  function formatOdometer(km) {
+    return Number(km).toLocaleString('en-US') + ' km';
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // Computes on-track / due-soon / overdue per schedule item, for items
+  // that have a km and/or month interval — mirrors the old workbook
+  // Dashboard's "SCHEDULED MAINTENANCE — STATUS" section, but derived
+  // live from ServiceLog + ServiceSchedule instead of a manual cell.
+  function computeScheduleStatus(serviceLog, serviceSchedule, currentOdometer) {
+    var latestByCategory = {};
+    serviceLog.forEach(function (entry) {
+      if (!entry.Category) return;
+      var existing = latestByCategory[entry.Category];
+      if (!existing || Number(entry.Odometer) > Number(existing.Odometer)) {
+        latestByCategory[entry.Category] = entry;
+      }
+    });
+
+    var now = new Date();
+
+    return serviceSchedule
+      .filter(function (item) { return item.IntervalKm || item.IntervalMonths; })
+      .map(function (item) {
+        var last = latestByCategory[item.ServiceItem];
+        if (!last) {
+          return { item: item.ServiceItem, status: 'none', kmRemaining: null, dueAtKm: null };
+        }
+
+        var lastOdometer = Number(last.Odometer);
+        var kmRemaining = item.IntervalKm
+          ? (lastOdometer + Number(item.IntervalKm)) - Number(currentOdometer)
+          : null;
+
+        var monthsRemaining = null;
+        if (item.IntervalMonths && last.Date) {
+          var lastDate = new Date(last.Date);
+          if (!isNaN(lastDate.getTime())) {
+            var monthsSince = (now.getFullYear() - lastDate.getFullYear()) * 12 + (now.getMonth() - lastDate.getMonth());
+            monthsRemaining = Number(item.IntervalMonths) - monthsSince;
+          }
+        }
+
+        var status = 'ok';
+        if ((kmRemaining !== null && kmRemaining < 0) || (monthsRemaining !== null && monthsRemaining < 0)) {
+          status = 'overdue';
+        } else if ((kmRemaining !== null && kmRemaining <= 2000) || (monthsRemaining !== null && monthsRemaining <= 2)) {
+          status = 'soon';
+        }
+
+        return {
+          item: item.ServiceItem,
+          status: status,
+          kmRemaining: kmRemaining,
+          dueAtKm: item.IntervalKm ? lastOdometer + Number(item.IntervalKm) : null
+        };
+      });
+  }
+
+  function renderAudiCard(data) {
+    var settings = data.settings;
+    var serviceLog = data.serviceLog;
+    var currentOdometer = Number(settings.CurrentOdometer);
+
+    document.getElementById('audiOdometer').textContent = formatOdometer(currentOdometer);
+
+    var latestEntry = serviceLog.slice().sort(function (a, b) {
+      return Number(b.Odometer) - Number(a.Odometer);
+    })[0];
+    document.getElementById('audiLastService').textContent = latestEntry
+      ? formatDate(latestEntry.Date) + ' — ' + latestEntry.Category
+      : 'no entries yet';
+
+    var statuses = computeScheduleStatus(serviceLog, data.serviceSchedule, currentOdometer);
+    var problems = statuses
+      .filter(function (s) { return s.status === 'overdue' || s.status === 'soon'; })
+      .sort(function (a, b) {
+        var aKm = a.kmRemaining === null ? Infinity : a.kmRemaining;
+        var bKm = b.kmRemaining === null ? Infinity : b.kmRemaining;
+        return aKm - bKm;
+      });
+
+    var stackHtml = '';
+    if (problems.length === 0) {
+      stackHtml = '<span class="status-pill ok">All caught up</span>';
+    } else {
+      problems.slice(0, 2).forEach(function (p) {
+        var suffix = p.kmRemaining !== null
+          ? (p.status === 'overdue'
+              ? Math.abs(Math.round(p.kmRemaining)).toLocaleString('en-US') + ' km over'
+              : Math.round(p.kmRemaining).toLocaleString('en-US') + ' km left')
+          : (p.status === 'overdue' ? 'overdue' : 'due soon');
+        stackHtml += '<span class="status-pill ' + p.status + '">' + p.item + ' · ' + suffix + '</span>';
+      });
+    }
+    document.getElementById('audiStatusStack').innerHTML = stackHtml;
+
+    var oilStatus = statuses.filter(function (s) { return s.item === 'Oil Change'; })[0];
+    var oilHtml = '';
+    if (oilStatus && oilStatus.status !== 'overdue' && oilStatus.dueAtKm !== null) {
+      oilHtml = '<span class="status-pill ' + (oilStatus.status === 'soon' ? 'soon' : 'ok') + '">Oil · OK to '
+        + Number(oilStatus.dueAtKm).toLocaleString('en-US') + ' km</span>';
+    }
+    document.getElementById('audiOkPill').innerHTML = oilHtml;
+    document.getElementById('audiEntryCount').textContent = serviceLog.length + ' entries';
+    document.getElementById('fleetEntryCount').textContent = serviceLog.length;
+  }
+
+  function boot() {
+    apiGet('bootstrap', { vehicleId: 'audi-a4-2014' }).then(function (res) {
+      if (res.ok) {
+        renderAudiCard(res.data);
+      } else {
+        console.error('bootstrap failed:', res.error);
+        showToast('Could not load live Audi data — showing last saved values');
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — showing last saved values');
+    });
+  }
+
+  boot();
+</script>
+
+</body>
+</html>
