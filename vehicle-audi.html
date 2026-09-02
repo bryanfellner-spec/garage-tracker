@@ -458,14 +458,14 @@
   }
 
   /* ---------- clickable rows ---------- */
-  .schedule-row, .seasonal-row, .mod-row {
+  .schedule-row, .seasonal-row, .mod-row, .activity-row {
     cursor: pointer;
     transition: background 0.12s ease;
   }
-  .schedule-row:hover, .seasonal-row:hover, .mod-row:hover {
+  .schedule-row:hover, .seasonal-row:hover, .mod-row:hover, .activity-row:hover {
     background: var(--surface-raised);
   }
-  .schedule-row:focus-visible, .seasonal-row:focus-visible, .mod-row:focus-visible {
+  .schedule-row:focus-visible, .seasonal-row:focus-visible, .mod-row:focus-visible, .activity-row:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
   }
@@ -570,6 +570,8 @@
   }
   .mod-row .item-name { font-weight: 500; font-size: 14px; }
   .mod-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .mod-row .col-label { font-size: 10px; color: var(--text-faint); display: block; margin-bottom: 2px; }
+  .mod-row .col-value { font-size: 13px; color: var(--text-muted); }
   .mod-badge {
     display: inline-flex;
     align-items: center;
@@ -1454,9 +1456,15 @@
           <option>Summer Set</option>
         </select>
       </div>
-      <div class="form-field">
-        <label>Tread depth of set coming off (mm)</label>
-        <input type="number" step="0.1" id="tireSwapTread" placeholder="optional">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Tread depth of set coming off (mm)</label>
+          <input type="number" step="0.1" id="tireSwapTread" placeholder="optional">
+        </div>
+        <div class="form-field">
+          <label>Cost ($)</label>
+          <input type="number" step="0.01" id="tireSwapCost" placeholder="e.g. if new tires">
+        </div>
       </div>
       <div class="form-field">
         <label>Notes</label>
@@ -1903,7 +1911,7 @@
 
   function modRowHtml(mod) {
     var sub = [mod.Category, mod.Date ? formatDateLong(mod.Date) : null, mod.Odometer ? formatOdometer(mod.Odometer) + ' km' : null].filter(Boolean).join(' &middot; ');
-    return '<div class="mod-row" data-cost="' + (Number(mod.Cost) || 0) + '" data-status="installed" data-entry-id="' + mod.EntryID + '" data-source="mod">' +
+    return '<div class="mod-row" role="button" tabindex="0" data-cost="' + (Number(mod.Cost) || 0) + '" data-status="installed" data-entry-id="' + mod.EntryID + '" data-source="mod" onclick="openModForm(this)" onkeydown="if(event.key===\'Enter\')openModForm(this)">' +
       '<div class="row-lead">' + catChipHtml(mod.Modification || mod.Category) + '<div><div class="item-name">' + (mod.Modification || 'Untitled modification') + '</div><div class="item-sub">' + (sub || 'No details') + '</div></div></div>' +
       '<div><span class="col-label">Details</span><span class="col-value">' + (mod.Details || '&mdash;') + '</span></div>' +
       '<div style="display:flex; align-items:center; gap:6px;">' +
@@ -1928,7 +1936,7 @@
   }
 
   function activityRowHtml(entry) {
-    return '<div class="activity-row" data-cost="' + (Number(entry.Cost) || 0) + '" data-entry-id="' + entry.EntryID + '" data-source="service">' +
+    return '<div class="activity-row" role="button" tabindex="0" data-cost="' + (Number(entry.Cost) || 0) + '" data-entry-id="' + entry.EntryID + '" data-source="service" onclick="openEntryEditForm(this)" onkeydown="if(event.key===\'Enter\')openEntryEditForm(this)">' +
       '<div class="activity-row-inner">' +
         '<div class="activity-left">' + catChipHtml(entry.Category, 'sm') +
           '<span class="activity-date">' + formatDateShort(entry.Date) + '</span>' +
@@ -1938,7 +1946,7 @@
         '<div style="display:flex; align-items:center; gap:10px;">' +
           '<span class="activity-odo">' + (entry.Odometer ? formatOdometer(entry.Odometer) + ' km' : 'no odo') + '</span>' +
           costTagHtml(entry.Cost) +
-          '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+          '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
         '</div>' +
       '</div></div>';
   }
@@ -2068,6 +2076,7 @@
     var odo = document.getElementById('tireSwapOdo').value;
     var setName = document.getElementById('tireSwapSet').value; // "Winter Set" | "Summer Set"
     var tread = document.getElementById('tireSwapTread').value;
+    var cost = document.getElementById('tireSwapCost').value;
     var notes = document.getElementById('tireSwapNotes').value;
     var fullNotes = (tread ? 'Tread depth of outgoing set: ' + tread + 'mm. ' : '') + (notes || '');
 
@@ -2079,7 +2088,7 @@
       vehicleId: VEHICLE_ID,
       entry: {
         date: date, odometer: odo, category: 'Tire Swap',
-        description: setName + ' mounted', notes: fullNotes
+        description: setName + ' mounted', cost: cost, notes: fullNotes
       }
     }).then(function (res) {
       if (res.ok) {
@@ -2099,30 +2108,108 @@
     });
   }
 
+  var currentEditingEntryId = null;
+
   function openCategoryPicker() {
+    currentEditingEntryId = null;
+    document.getElementById('formView').reset();
+    document.getElementById('entrySaveBtn').textContent = 'Save entry';
     document.getElementById('categoryView').style.display = 'block';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('addSheet').classList.add('open');
   }
   function selectCategory(name) {
+    currentEditingEntryId = null;
+    document.getElementById('formView').reset();
     document.getElementById('entryCategory').value = name;
     document.getElementById('formTitle').textContent = 'Log: ' + name;
+    document.getElementById('entrySaveBtn').textContent = 'Save entry';
     document.getElementById('categoryView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
   }
   function openFormDirect(name) {
+    currentEditingEntryId = null;
+    document.getElementById('formView').reset();
     document.getElementById('entryCategory').value = name;
     document.getElementById('formTitle').textContent = 'Log: ' + name;
+    document.getElementById('entrySaveBtn').textContent = 'Save entry';
     document.getElementById('categoryView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('addSheet').classList.add('open');
   }
+
+  // Opens the same "log entry" sheet pre-filled with an existing
+  // ServiceLog row's values, for editing in place (updateServiceLogEntry)
+  // instead of creating a new one. Category stays locked to its original
+  // value — changing what kind of entry this is isn't supported here.
+  function openEntryEditForm(rowEl) {
+    var entryId = rowEl.getAttribute('data-entry-id');
+    var entry = (STATE.serviceLog || []).filter(function (e) { return String(e.EntryID) === String(entryId); })[0];
+    if (!entry) return;
+
+    currentEditingEntryId = entryId;
+    document.getElementById('entryCategory').value = entry.Category || '';
+    document.getElementById('formTitle').textContent = 'Edit: ' + (entry.Category || 'entry');
+    document.getElementById('entryDate').value = entry.Date || '';
+    document.getElementById('entryOdo').value = entry.Odometer || '';
+    document.getElementById('entryDesc').value = entry.Description || '';
+    document.getElementById('entryQtyParts').value = entry.QtyParts || '';
+    document.getElementById('entryCost').value = entry.Cost || '';
+    document.getElementById('entryPerformedBy').value = entry.PerformedBy || '';
+    document.getElementById('entryOwner').value = entry.Owner || '';
+    document.getElementById('entryNotes').value = entry.Notes || '';
+    document.getElementById('entrySaveBtn').textContent = 'Save changes';
+    document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('addSheet').classList.add('open');
+  }
+
   var currentEditingModRow = null;
 
-  function openModForm(name, rowEl) {
+  // rowEl is either:
+  //  - omitted/null: opening the form fresh to log a brand new mod
+  //  - a real Sheet-backed mod row (data-source="mod"): look the full
+  //    record up in STATE and edit it in place via updateModification
+  //  - a session-only "planned" mod row (no data-source): read its
+  //    current values back out of the DOM, same as before this edit
+  //    feature existed
+  function openModForm(rowEl) {
     currentEditingModRow = rowEl || null;
-    document.getElementById('modFormTitle').textContent = name ? 'Log: ' + name : 'Log a modification';
-    document.getElementById('modName').value = name || '';
+    var isBackendEdit = !!(rowEl && rowEl.getAttribute('data-source') === 'mod');
+    var mod = null;
+
+    if (isBackendEdit) {
+      var entryId = rowEl.getAttribute('data-entry-id');
+      mod = (STATE.modifications || []).filter(function (m) { return String(m.EntryID) === String(entryId); })[0] || null;
+    } else if (rowEl) {
+      mod = {
+        Modification: rowEl.querySelector('.item-name').textContent,
+        Category: (rowEl.querySelector('.item-sub').textContent || '').split(' \u00b7 ')[0],
+        Details: rowEl.querySelector('.col-value').textContent,
+        Cost: rowEl.getAttribute('data-cost') || ''
+      };
+    }
+
+    document.getElementById('modFormTitle').textContent = mod ? 'Edit: ' + (mod.Modification || 'modification') : 'Log a modification';
+    document.getElementById('modName').value = mod ? (mod.Modification || '') : '';
+    document.getElementById('modCategory').value = mod && mod.Category ? mod.Category : 'Intake';
+    document.getElementById('modDate').value = mod ? (mod.Date || '') : '';
+    document.getElementById('modOdo').value = mod ? (mod.Odometer || '') : '';
+    document.getElementById('modDetails').value = mod ? (mod.Details === '\u2014' ? '' : (mod.Details || '')) : '';
+    document.getElementById('modCost').value = mod && mod.Cost ? mod.Cost : '';
+    document.getElementById('modInstalledBy').value = mod ? (mod.InstalledBy || '') : '';
+    document.getElementById('modNotes').value = mod ? (mod.Notes || '') : '';
+
+    // A real Sheet-backed mod is always "Installed" — editing it can't
+    // turn it into a session-only "planned" row, so lock the toggle.
+    document.getElementById('modStatusInstalled').checked = isBackendEdit;
+    document.getElementById('modStatusPlanned').checked = !isBackendEdit;
+    document.getElementById('modStatusPlanned').disabled = isBackendEdit;
+    document.getElementById('modStatusInstalled').disabled = isBackendEdit;
+
+    document.getElementById('modSheetSub').textContent = isBackendEdit
+      ? 'Editing a modification already saved to the Sheet.'
+      : 'Installed mods save straight to the Sheet. Planned mods stay local to this browser for now — the Sheet has no "planned" field yet.';
     document.getElementById('modDeleteBtn').style.display = rowEl ? 'flex' : 'none';
     document.getElementById('modSheet').classList.add('open');
   }
@@ -2554,17 +2641,21 @@
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
 
-    apiPost('addServiceLogEntry', {
-      vehicleId: VEHICLE_ID,
-      entry: {
-        date: date, odometer: odo, category: category, description: desc,
-        qtyParts: qtyParts, cost: cost, performedBy: performedBy, owner: owner, notes: notes
-      }
-    }).then(function (res) {
+    var isEdit = !!currentEditingEntryId;
+    var entryPayload = {
+      date: date, odometer: odo, category: category, description: desc,
+      qtyParts: qtyParts, cost: cost, performedBy: performedBy, owner: owner, notes: notes
+    };
+    var apiCall = isEdit
+      ? apiPost('updateServiceLogEntry', { vehicleId: VEHICLE_ID, entryId: currentEditingEntryId, entry: entryPayload })
+      : apiPost('addServiceLogEntry', { vehicleId: VEHICLE_ID, entry: entryPayload });
+
+    apiCall.then(function (res) {
       if (res.ok) {
-        showToast('Entry saved to the Sheet');
+        showToast(isEdit ? 'Entry updated' : 'Entry saved to the Sheet');
         closeSheet('addSheet');
         document.getElementById('formView').reset();
+        currentEditingEntryId = null;
         boot();
       } else {
         showToast('Could not save: ' + (res.error || 'unknown error'));
@@ -2574,7 +2665,7 @@
       showToast('Could not reach the backend — entry was not saved');
     }).finally(function () {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save entry';
+      saveBtn.textContent = isEdit ? 'Save changes' : 'Save entry';
     });
   }
 
@@ -2594,12 +2685,16 @@
       var saveBtn = document.getElementById('modSaveBtn');
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving…';
-      apiPost('addModification', {
-        vehicleId: VEHICLE_ID,
-        entry: { date: date, odometer: odo, modification: name, category: category, details: details, cost: cost, installedBy: installedBy, notes: notes }
-      }).then(function (res) {
+
+      var isBackendEdit = !!(currentEditingModRow && currentEditingModRow.getAttribute('data-source') === 'mod');
+      var entryPayload = { date: date, odometer: odo, modification: name, category: category, details: details, cost: cost, installedBy: installedBy, notes: notes };
+      var apiCall = isBackendEdit
+        ? apiPost('updateModification', { vehicleId: VEHICLE_ID, entryId: currentEditingModRow.getAttribute('data-entry-id'), entry: entryPayload })
+        : apiPost('addModification', { vehicleId: VEHICLE_ID, entry: entryPayload });
+
+      apiCall.then(function (res) {
         if (res.ok) {
-          showToast('Modification saved to the Sheet');
+          showToast(isBackendEdit ? 'Modification updated' : 'Modification saved to the Sheet');
           closeSheet('modSheet');
           document.querySelector('#modSheet form').reset();
           currentEditingModRow = null;
@@ -2643,7 +2738,7 @@
           '<span class="mod-badge planned">Planned</span>' +
           '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
         '</div>';
-      row.onclick = function () { openModForm(name, row); };
+      row.onclick = function () { openModForm(row); };
       document.getElementById('modList').appendChild(row);
     }
 
@@ -2655,13 +2750,41 @@
   }
 
   function deleteFromForm() {
-    if (currentEditingModRow) {
-      currentEditingModRow.classList.add('voided');
-      var delBtn = currentEditingModRow.querySelector('.row-delete-btn');
-      delBtn.innerHTML = 'Undo';
-      delBtn.classList.add('is-undo');
-      recalcModCount();
+    if (!currentEditingModRow) {
+      closeSheet('modSheet');
+      return;
     }
+
+    var entryId = currentEditingModRow.getAttribute('data-entry-id');
+    var source = currentEditingModRow.getAttribute('data-source');
+
+    if (entryId && source && VOID_ACTION_BY_SOURCE[source]) {
+      // Real Sheet-backed mod — void it on the backend, same as the
+      // trash icon on the row itself (VOID_ACTION_BY_SOURCE/deleteRow).
+      if (!confirm('Remove this entry? This voids it in the Google Sheet — there\'s no undo from here.')) return;
+      apiPost(VOID_ACTION_BY_SOURCE[source], { vehicleId: VEHICLE_ID, entryId: entryId }).then(function (res) {
+        if (res.ok) {
+          showToast('Entry removed');
+          closeSheet('modSheet');
+          currentEditingModRow = null;
+          boot();
+        } else {
+          showToast('Could not remove entry: ' + (res.error || 'unknown error'));
+        }
+      }).catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend to remove this entry');
+      });
+      return;
+    }
+
+    // Session-only "planned" row — no Sheet record, just mark it voided
+    // in the DOM (unchanged legacy behavior).
+    currentEditingModRow.classList.add('voided');
+    var delBtn = currentEditingModRow.querySelector('.row-delete-btn');
+    delBtn.innerHTML = 'Undo';
+    delBtn.classList.add('is-undo');
+    recalcModCount();
     closeSheet('modSheet');
   }
 
