@@ -951,6 +951,28 @@
   @media (max-width: 640px) {
     .fuel-row { grid-template-columns: 1fr 1fr; row-gap: 6px; }
   }
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 20;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -971,8 +993,8 @@
       <p class="vehicle-vin">VIN WAUFFCFL3EN007074</p>
     </div>
     <div class="odo-readout">
-      <div class="odo-value" id="odoDisplay">146,053</div>
-      <div class="odo-label" id="odoAsOf">km &middot; as of Jun 8, 2026</div>
+      <div class="odo-value" id="odoDisplay">&mdash;</div>
+      <div class="odo-label" id="odoAsOf">loading&hellip;</div>
       <div class="quick-mileage">
         <input type="number" id="odoInput" placeholder="146053">
         <button onclick="updateMileage()">Update</button>
@@ -993,19 +1015,19 @@
 
   <div class="quick-stats">
     <div class="qs-item">
-      <div class="qs-value">35</div>
+      <div class="qs-value" id="qsServiceRecords">&mdash;</div>
       <div class="qs-label">Service records logged</div>
     </div>
     <div class="qs-item">
-      <div class="qs-value">12</div>
+      <div class="qs-value" id="qsOilChanges">&mdash;</div>
       <div class="qs-label">Oil changes on record</div>
     </div>
     <div class="qs-item">
-      <div class="qs-value">1 <span style="font-size:13px;color:var(--text-faint);font-family:'Inter',sans-serif;font-weight:400;">+3 planned</span></div>
+      <div class="qs-value" id="qsModifications">&mdash;</div>
       <div class="qs-label">Modifications</div>
     </div>
     <div class="qs-item">
-      <div class="qs-value">150,000</div>
+      <div class="qs-value" id="qsLatestOdometer">&mdash;</div>
       <div class="qs-label">Latest odometer on file</div>
     </div>
   </div>
@@ -1077,171 +1099,11 @@
         <button class="section-add-btn" onclick="openScheduleTaskForm()">+ Add task</button>
       </div>
     </div>
-    <div class="schedule-list">
-
-      <div class="schedule-row" style="--row-color: var(--status-overdue);" role="button" tabindex="0" onclick="openFormDirect('Brake Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Brake Fluid')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Brake Fluid</div><div class="item-sub">Last: Apr 11, 2020</div><div class="due-bar-track"><div class="due-bar-fill" style="width:100%;"></div></div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">24 mo</span></div>
-        <div><span class="col-label">Was due</span><span class="col-value">Apr 11, 2022</span></div>
-        <span class="status-pill overdue">Overdue</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-overdue);" role="button" tabindex="0" onclick="openFormDirect('Spark Plugs')" onkeydown="if(event.key==='Enter')openFormDirect('Spark Plugs')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-spark);--chip-bg:var(--cat-spark-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13.5h5.3L9.2 22l9-12.5h-5.3z"/></svg></span><div><div class="item-name">Spark Plugs</div><div class="item-sub">Last: Apr 16, 2021 &middot; 78,049 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:100%;"></div></div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 72 mo</span></div>
-        <div><span class="col-label">Was due</span><span class="col-value">138,049 km</span></div>
-        <span class="status-pill overdue">Overdue &middot; 8,004 km</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Oil Change')" onkeydown="if(event.key==='Enter')openFormDirect('Oil Change')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span><div><div class="item-name">Oil Change</div><div class="item-sub">Last: Jun 8, 2026 &middot; 146,053 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:3%;"></div></div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">161,053 km</span></div>
-        <span class="status-pill ok">OK &middot; 15,000 km left</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Cabin Air Filter')" onkeydown="if(event.key==='Enter')openFormDirect('Cabin Air Filter')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Cabin Air Filter</div><div class="item-sub">Last: Oct 1, 2025 &middot; 135,000 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:37%;"></div></div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">165,000 km</span></div>
-        <span class="status-pill ok">OK &middot; 18,947 km left</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-ok);" role="button" tabindex="0" onclick="openFormDirect('Engine Air Filter')" onkeydown="if(event.key==='Enter')openFormDirect('Engine Air Filter')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Engine Air Filter</div><div class="item-sub">Last: Nov 5, 2023 &middot; 109,500 km</div><div class="due-bar-track"><div class="due-bar-fill" style="width:41%;"></div></div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">90,000 km</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">199,500 km</span></div>
-        <span class="status-pill ok">OK &middot; 53,447 km left</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Brake Disc Thickness Check')" onkeydown="if(event.key==='Enter')openFormDirect('Brake Disc Thickness Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Brake Disc Thickness Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Transmission Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Transmission Fluid')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Transmission Fluid</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">60,000 km</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Serpentine Belt Check')" onkeydown="if(event.key==='Enter')openFormDirect('Serpentine Belt Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Serpentine Belt Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">120,000 km</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Coolant (G13) Replacement')" onkeydown="if(event.key==='Enter')openFormDirect('Coolant (G13) Replacement')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Coolant (G13) Replacement</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">100,000 km / 60 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-
+    <div class="schedule-list" id="scheduleListMain">
+      <p class="section-note">loading live schedule status&hellip;</p>
     </div>
 
-    <div class="schedule-list" id="moreScheduleList" style="display:none; margin-top:6px;">
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Wiper Blades')" onkeydown="if(event.key==='Enter')openFormDirect('Wiper Blades')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Wiper Blades</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Washer System & Fluid')" onkeydown="if(event.key==='Enter')openFormDirect('Washer System & Fluid')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-fluid);--chip-bg:var(--cat-fluid-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/></svg></span><div><div class="item-name">Washer System &amp; Fluid</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Brake System Inspection')" onkeydown="if(event.key==='Enter')openFormDirect('Brake System Inspection')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Brake System Inspection</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Tires & TPMS Check')" onkeydown="if(event.key==='Enter')openFormDirect('Tires & TPMS Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Tires &amp; TPMS Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Tire Rotation')" onkeydown="if(event.key==='Enter')openFormDirect('Tire Rotation')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">Tire Rotation</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">15,000 km / 12 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Battery Check')" onkeydown="if(event.key==='Enter')openFormDirect('Battery Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-battery);--chip-bg:var(--cat-battery-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="15" height="11" rx="2"/><line x1="20" y1="10.3" x2="20" y2="14.7"/><line x1="7.5" y1="10" x2="7.5" y2="15"/></svg></span><div><div class="item-name">Battery Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Cooling System Check')" onkeydown="if(event.key==='Enter')openFormDirect('Cooling System Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Cooling System Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Drive Shaft Boots')" onkeydown="if(event.key==='Enter')openFormDirect('Drive Shaft Boots')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Drive Shaft Boots</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Exhaust System Check')" onkeydown="if(event.key==='Enter')openFormDirect('Exhaust System Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Exhaust System Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Suspension & Axle Check')" onkeydown="if(event.key==='Enter')openFormDirect('Suspension & Axle Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Suspension &amp; Axle Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Air-cleaner Snow Screen Clean')" onkeydown="if(event.key==='Enter')openFormDirect('Air-cleaner Snow Screen Clean')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span><div><div class="item-name">Air-cleaner Snow Screen Clean</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Sunroof Rails Clean/Lube')" onkeydown="if(event.key==='Enter')openFormDirect('Sunroof Rails Clean/Lube')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Sunroof Rails Clean/Lube</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Plenum Drain Check')" onkeydown="if(event.key==='Enter')openFormDirect('Plenum Drain Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Plenum Drain Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Underbody & Corrosion Visual')" onkeydown="if(event.key==='Enter')openFormDirect('Underbody & Corrosion Visual')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Underbody &amp; Corrosion Visual</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">30,000 km / 24 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Door Hinges/Locks Lube')" onkeydown="if(event.key==='Enter')openFormDirect('Door Hinges/Locks Lube')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Door Hinges/Locks Lube</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-      <div class="schedule-row" style="--row-color: var(--status-none);" role="button" tabindex="0" onclick="openFormDirect('Interior Lights Check')" onkeydown="if(event.key==='Enter')openFormDirect('Interior Lights Check')">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Interior Lights Check</div><div class="item-sub">No record on file</div></div></div>
-        <div><span class="col-label">Interval</span><span class="col-value">60,000 km / 48 mo</span></div>
-        <div><span class="col-label">Next due</span><span class="col-value">&mdash;</span></div>
-        <span class="status-pill none">No record</span>
-      </div>
-    </div>
+    <div class="schedule-list" id="moreScheduleList" style="display:none; margin-top:6px;"></div>
 
     <button class="section-add-btn" style="margin-top:10px;" onclick="toggleMoreSchedule()" id="moreScheduleBtn">Show 16 more factory items (incl. Wiper Blades)</button>
     <div id="customTaskList"></div>
@@ -1256,19 +1118,19 @@
     <div class="seasonal-list">
       <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Tire Swap')" onkeydown="if(event.key==='Enter')openFormDirect('Tire Swap')">
         <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Tire Swap</span></span>
-        <span class="item-detail">Last: Oct 22, 2023 &middot; 109,500 km</span>
+        <span class="item-detail" id="seasonalTireSwap">loading&hellip;</span>
       </div>
       <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Alignment')" onkeydown="if(event.key==='Enter')openFormDirect('Alignment')">
         <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Alignment</span></span>
-        <span class="item-detail">Last: Sep 15, 2023 &middot; 105,000 km</span>
+        <span class="item-detail" id="seasonalAlignment">loading&hellip;</span>
       </div>
       <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Timing Chain')" onkeydown="if(event.key==='Enter')openFormDirect('Timing Chain')">
         <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><span class="item-name">Timing Chain</span></span>
-        <span class="item-detail">Last: Sep 12, 2018 &middot; 58,433 km &mdash; watch for cold-start rattle</span>
+        <span class="item-detail" id="seasonalTimingChain">loading&hellip;</span>
       </div>
       <div class="seasonal-row" role="button" tabindex="0" onclick="openFormDirect('Front Wheel Bearings')" onkeydown="if(event.key==='Enter')openFormDirect('Front Wheel Bearings')">
         <span class="row-lead"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><span class="item-name">Front Wheel Bearings</span></span>
-        <span class="item-detail">Replaced Mar 1, 2025 &middot; 125,000 km &mdash; watch opposite side</span>
+        <span class="item-detail" id="seasonalFrontWheelBearings">loading&hellip;</span>
       </div>
     </div>
   </div>
@@ -1323,45 +1185,6 @@
       <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
     </div>
     <div class="mod-list" id="modList">
-      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="installed" onclick="openModForm('Cold Air Intake', this)" onkeydown="if(event.key==='Enter')openModForm('Cold Air Intake', this)">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Cold Air Intake</div><div class="item-sub">Intake &middot; ~early 2025 &middot; ~127,000 km</div></div></div>
-        <div><span class="col-label">Details</span><span class="col-value">Aftermarket cold air intake</span></div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="cost-tag none">no cost logged</span>
-          <span class="mod-badge installed">Installed</span>
-          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-        </div>
-      </div>
-
-      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('Downpipe & Full Exhaust', this)" onkeydown="if(event.key==='Enter')openModForm('Downpipe & Full Exhaust', this)">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Downpipe &amp; Full Exhaust</div><div class="item-sub">Exhaust &middot; planned by Bryan's son</div></div></div>
-        <div><span class="col-label">Details</span><span class="col-value">Catless/high-flow downpipe + full exhaust</span></div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="cost-tag none">no estimate</span>
-          <span class="mod-badge planned">Planned</span>
-          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-        </div>
-      </div>
-
-      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('Stage 2 ECU Tune', this)" onkeydown="if(event.key==='Enter')openModForm('Stage 2 ECU Tune', this)">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-general);--chip-bg:var(--cat-general-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 1 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></span><div><div class="item-name">Stage 2 ECU Tune</div><div class="item-sub">ECU/Tune &middot; planned, pairs with exhaust</div></div></div>
-        <div><span class="col-label">Details</span><span class="col-value">Requires supporting exhaust mods first</span></div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="cost-tag none">no estimate</span>
-          <span class="mod-badge planned">Planned</span>
-          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-        </div>
-      </div>
-
-      <div class="mod-row" role="button" tabindex="0" data-cost="0" data-status="planned" onclick="openModForm('New Rims', this)" onkeydown="if(event.key==='Enter')openModForm('New Rims', this)">
-        <div class="row-lead"><span class="cat-chip" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span><div><div class="item-name">New Rims</div><div class="item-sub">Wheels/Tires &middot; planned</div></div></div>
-        <div><span class="col-label">Details</span><span class="col-value">Spec not finalized</span></div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="cost-tag none">no estimate</span>
-          <span class="mod-badge planned">Planned</span>
-          <button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1414,80 +1237,12 @@
       <h2 class="section-title">Recent activity</h2>
     </div>
     <div class="activity-list" id="activityList">
-      <div class="activity-row" data-cost="0">
-        <div class="activity-row-inner">
-          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
-            <span class="activity-date">Jun 8 '26</span>
-            <span class="activity-cat">Oil Change</span>
-            <span class="activity-desc">Engine oil &amp; filter change</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="activity-odo">146,053 km</span>
-            <span class="cost-tag none">no cost logged</span>
-            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <div class="activity-row" data-cost="0">
-        <div class="activity-row-inner">
-          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
-            <span class="activity-date">Oct 27 '25</span>
-            <span class="activity-cat">Oil Change</span>
-            <span class="activity-desc">Engine oil &amp; filter change</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="activity-odo">137,539 km</span>
-            <span class="cost-tag none">no cost logged</span>
-            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <div class="activity-row" data-cost="0">
-        <div class="activity-row-inner">
-          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-filter);--chip-bg:var(--cat-filter-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8.2v6.3l-3 1.5v-7.8z"/></svg></span>
-            <span class="activity-date">Oct 1 '25</span>
-            <span class="activity-cat">Cabin Air Filter</span>
-            <span class="activity-desc">Cabin (pollen) air filter replaced</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="activity-odo">135,000 km</span>
-            <span class="cost-tag none">no cost logged</span>
-            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <div class="activity-row" data-cost="0">
-        <div class="activity-row-inner">
-          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-oil);--chip-bg:var(--cat-oil-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg></span>
-            <span class="activity-date">Apr 6 '25</span>
-            <span class="activity-cat">Oil Change</span>
-            <span class="activity-desc">Engine oil &amp; filter change</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="activity-odo">128,638 km</span>
-            <span class="cost-tag none">no cost logged</span>
-            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-          </div>
-        </div>
-      </div>
-      <div class="activity-row" data-cost="0">
-        <div class="activity-row-inner">
-          <div class="activity-left"><span class="cat-chip sm" style="--chip-color:var(--cat-wheel);--chip-bg:var(--cat-wheel-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.3"/><line x1="12" y1="4" x2="12" y2="6.6"/><line x1="12" y1="17.4" x2="12" y2="20"/><line x1="4" y1="12" x2="6.6" y2="12"/><line x1="17.4" y1="12" x2="20" y2="12"/></svg></span>
-            <span class="activity-date">Mar 1 '25</span>
-            <span class="activity-cat">Front Wheel Bearings</span>
-            <span class="activity-desc">Front wheel bearing(s) replaced</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="activity-odo">125,000 km</span>
-            <span class="cost-tag none">no cost logged</span>
-            <button class="row-delete-btn" onclick="deleteRow(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg></button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
 </div>
+
+<div class="toast" id="toast"></div>
 
 <button class="fab" onclick="openCategoryPicker()">
   <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1516,7 +1271,7 @@
 
     <form id="formView" style="display:none;" onsubmit="submitEntryForm(event)">
       <h3 class="sheet-title" id="formTitle">Log entry</h3>
-      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+      <p class="sheet-sub">Saves straight to the Google Sheet — fill in what you know.</p>
 
       <div class="form-field locked">
         <label>Category</label>
@@ -1538,21 +1293,31 @@
       </div>
       <div class="form-row">
         <div class="form-field">
+          <label>Qty / Parts</label>
+          <input type="text" id="entryQtyParts" placeholder="e.g. 4 tires, 0.25 qt">
+        </div>
+        <div class="form-field">
           <label>Cost ($)</label>
           <input type="number" step="0.01" id="entryCost" placeholder="optional">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-field">
           <label>Performed by</label>
-          <input type="text" placeholder="e.g. self, shop name">
+          <input type="text" id="entryPerformedBy" placeholder="e.g. self, shop name">
+        </div>
+        <div class="form-field">
+          <label>Owner</label>
+          <input type="text" id="entryOwner" placeholder="e.g. You, Owner 2">
         </div>
       </div>
       <div class="form-field">
         <label>Notes</label>
-        <textarea placeholder="optional"></textarea>
+        <textarea id="entryNotes" placeholder="optional"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('addSheet')">Cancel</button>
-        <button type="submit" class="btn-save">Save entry</button>
+        <button type="submit" class="btn-save" id="entrySaveBtn">Save entry</button>
       </div>
     </form>
 
@@ -1564,7 +1329,7 @@
   <div class="sheet">
     <form onsubmit="submitModForm(event)">
       <h3 class="sheet-title" id="modFormTitle">Log a modification</h3>
-      <p class="sheet-sub">Preview form — not yet wired to a backend.</p>
+      <p class="sheet-sub" id="modSheetSub">Installed mods save straight to the Sheet. Planned mods stay local to this browser for now — the Sheet has no "planned" field yet.</p>
 
       <div class="form-field">
         <label>Modification</label>
@@ -1595,11 +1360,11 @@
       <div class="form-row">
         <div class="form-field">
           <label>Date (if installed)</label>
-          <input type="date">
+          <input type="date" id="modDate">
         </div>
         <div class="form-field">
           <label>Odometer (km)</label>
-          <input type="number" placeholder="optional">
+          <input type="number" id="modOdo" placeholder="optional">
         </div>
       </div>
       <div class="form-field">
@@ -1613,16 +1378,16 @@
         </div>
         <div class="form-field">
           <label>Installed by</label>
-          <input type="text" placeholder="e.g. shop name, self">
+          <input type="text" id="modInstalledBy" placeholder="e.g. shop name, self">
         </div>
       </div>
       <div class="form-field">
         <label>Notes</label>
-        <textarea placeholder="optional"></textarea>
+        <textarea id="modNotes" placeholder="optional"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('modSheet')">Cancel</button>
-        <button type="submit" class="btn-save">Save modification</button>
+        <button type="submit" class="btn-save" id="modSaveBtn">Save modification</button>
       </div>
       <button type="button" class="row-delete-btn" id="modDeleteBtn" style="display:none; width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="deleteFromForm()">Remove this modification</button>
     </form>
@@ -1876,6 +1641,117 @@
 </div>
 
 <script>
+  var toastTimer;
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+
+  // ---------- Backend config ----------
+  // Same permanent Apps Script Web App URL used by index.html (see blueprint §5).
+  var API_BASE = 'https://script.google.com/macros/s/AKfycbwhntNyiO3auQ07e_krvaRSfaQZjlg2w6d-zAvQfNeQudRSOVqWn3gyLIWjP6x8YQiPBQ/exec';
+  var VEHICLE_ID = 'audi-a4-2014';
+
+  function apiGet(action, params) {
+    var url = API_BASE + '?action=' + encodeURIComponent(action);
+    if (params) {
+      Object.keys(params).forEach(function (k) {
+        url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+      });
+    }
+    return fetch(url).then(function (res) { return res.json(); });
+  }
+
+  // POST as text/plain to avoid a CORS preflight Apps Script doesn't handle.
+  // Code.gs's handle_() parses e.postData.contents as JSON regardless of
+  // the declared content type, so this is purely a frontend fetch() detail.
+  function apiPost(action, payload) {
+    var body = Object.assign({ action: action }, payload);
+    return fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    }).then(function (res) { return res.json(); });
+  }
+
+  // Live app state, populated by boot() from the backend.
+  var STATE = { settings: {}, serviceLog: [], modifications: [], serviceSchedule: [], brakeReference: [], fluidsAndParts: [] };
+
+  function formatOdometer(km) {
+    if (km === null || km === undefined || km === '') return '—';
+    return Number(km).toLocaleString('en-US');
+  }
+
+  function formatDateLong(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso + (String(iso).length <= 10 ? 'T00:00:00' : ''));
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // Computes on-track / due-soon / overdue per schedule item — mirrors the
+  // same function in index.html (blueprint §8), for items that have a km
+  // and/or month interval. Items with no interval (Tire Swap, Alignment,
+  // Timing Chain, etc.) are handled separately by the seasonal-list render.
+  function computeScheduleStatus(serviceLog, serviceSchedule, currentOdometer) {
+    var latestByCategory = {};
+    serviceLog.forEach(function (entry) {
+      if (!entry.Category) return;
+      var existing = latestByCategory[entry.Category];
+      if (!existing || Number(entry.Odometer) > Number(existing.Odometer)) {
+        latestByCategory[entry.Category] = entry;
+      }
+    });
+
+    var now = new Date();
+
+    return serviceSchedule
+      .filter(function (item) { return item.IntervalKm || item.IntervalMonths; })
+      .map(function (item) {
+        var last = latestByCategory[item.ServiceItem];
+        if (!last) {
+          return { item: item.ServiceItem, status: 'none', kmRemaining: null, dueAtKm: null, last: null, intervalKm: item.IntervalKm, intervalMonths: item.IntervalMonths };
+        }
+
+        var lastOdometer = Number(last.Odometer);
+        var kmRemaining = item.IntervalKm
+          ? (lastOdometer + Number(item.IntervalKm)) - Number(currentOdometer)
+          : null;
+
+        var monthsRemaining = null;
+        var dueDate = null;
+        if (item.IntervalMonths && last.Date) {
+          var lastDate = new Date(last.Date);
+          if (!isNaN(lastDate.getTime())) {
+            var monthsSince = (now.getFullYear() - lastDate.getFullYear()) * 12 + (now.getMonth() - lastDate.getMonth());
+            monthsRemaining = Number(item.IntervalMonths) - monthsSince;
+            dueDate = new Date(lastDate.getFullYear(), lastDate.getMonth() + Number(item.IntervalMonths), lastDate.getDate());
+          }
+        }
+
+        var status = 'ok';
+        if ((kmRemaining !== null && kmRemaining < 0) || (monthsRemaining !== null && monthsRemaining < 0)) {
+          status = 'overdue';
+        } else if ((kmRemaining !== null && kmRemaining <= 2000) || (monthsRemaining !== null && monthsRemaining <= 2)) {
+          status = 'soon';
+        }
+
+        return {
+          item: item.ServiceItem,
+          status: status,
+          kmRemaining: kmRemaining,
+          dueAtKm: item.IntervalKm ? lastOdometer + Number(item.IntervalKm) : null,
+          dueDate: dueDate,
+          last: last,
+          intervalKm: item.IntervalKm,
+          intervalMonths: item.IntervalMonths
+        };
+      });
+  }
+
   function toggleTheme() {
     var html = document.documentElement;
     var isLight = html.getAttribute('data-theme') === 'light';
@@ -1905,6 +1781,224 @@
   function catChipHtml(name, sizeClass) {
     var cat = catForName(name);
     return '<span class="cat-chip ' + (sizeClass || '') + '" style="--chip-color:var(--cat-' + cat + ');--chip-bg:var(--cat-' + cat + '-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + CAT_ICONS[cat] + '</svg></span>';
+  }
+
+  // ---------- LIVE RENDER FUNCTIONS ----------
+
+  function renderOdometer(settings) {
+    document.getElementById('odoDisplay').textContent = formatOdometer(settings.CurrentOdometer);
+    document.getElementById('odoAsOf').textContent = settings.OdometerAsOf
+      ? 'km · as of ' + formatDateLong(settings.OdometerAsOf)
+      : 'km';
+  }
+
+  function renderQuickStats(data) {
+    var serviceLog = data.serviceLog;
+    var oilChanges = serviceLog.filter(function (e) { return e.Category === 'Oil Change'; }).length;
+    var maxOdo = Number(data.settings.CurrentOdometer) || 0;
+    serviceLog.forEach(function (e) { if (Number(e.Odometer) > maxOdo) maxOdo = Number(e.Odometer); });
+    data.modifications.forEach(function (e) { if (Number(e.Odometer) > maxOdo) maxOdo = Number(e.Odometer); });
+
+    document.getElementById('qsServiceRecords').textContent = serviceLog.length;
+    document.getElementById('qsOilChanges').textContent = oilChanges;
+    document.getElementById('qsLatestOdometer').textContent = formatOdometer(maxOdo);
+    // Modifications count (installed vs. locally-planned) is finished by
+    // recalcModCount() after renderModList() builds the DOM rows.
+  }
+
+  // Category -> plain-language due label helper shared by schedule rows.
+  function dueLabel(s) {
+    if (s.status === 'none') return 'No record';
+    var prefix = s.status === 'overdue' ? 'Overdue' : (s.status === 'soon' ? 'Due soon' : 'OK');
+    if (s.kmRemaining === null) return prefix;
+    var suffix = s.status === 'overdue'
+      ? Math.abs(Math.round(s.kmRemaining)).toLocaleString('en-US') + ' km over'
+      : Math.round(s.kmRemaining).toLocaleString('en-US') + ' km left';
+    return prefix + ' &middot; ' + suffix;
+  }
+
+  function scheduleRowHtml(s) {
+    var last = s.last;
+    var sub = last
+      ? 'Last: ' + formatDateLong(last.Date) + (last.Odometer ? ' &middot; ' + formatOdometer(last.Odometer) + ' km' : '')
+      : 'No record on file';
+
+    var barHtml = '';
+    if (last) {
+      var fraction = 0;
+      if (s.intervalKm && last.Odometer) {
+        fraction = (Number(STATE.settings.CurrentOdometer) - Number(last.Odometer)) / Number(s.intervalKm);
+      } else if (s.intervalMonths && last.Date) {
+        var lastDate = new Date(last.Date);
+        var monthsSince = (new Date().getFullYear() - lastDate.getFullYear()) * 12 + (new Date().getMonth() - lastDate.getMonth());
+        fraction = monthsSince / Number(s.intervalMonths);
+      }
+      fraction = Math.max(0, Math.min(1, fraction));
+      barHtml = '<div class="due-bar-track"><div class="due-bar-fill" style="width:' + Math.round(fraction * 100) + '%;"></div></div>';
+    }
+
+    var intervalLabel = [s.intervalKm ? Number(s.intervalKm).toLocaleString('en-US') + ' km' : null,
+      s.intervalMonths ? s.intervalMonths + ' mo' : null].filter(Boolean).join(' / ') || '—';
+
+    var dueColLabel = s.status === 'none' ? 'Next due' : (s.status === 'overdue' ? 'Was due' : 'Next due');
+    var dueColValue = s.dueAtKm ? formatOdometer(s.dueAtKm) + ' km' : (s.dueDate ? formatDateLong(s.dueDate.toISOString().slice(0, 10)) : '&mdash;');
+
+    var rowColorVar = s.status === 'overdue' ? 'var(--status-overdue)' : (s.status === 'soon' ? 'var(--status-soon)' : (s.status === 'ok' ? 'var(--status-ok)' : 'var(--status-none)'));
+    var pillClass = s.status === 'none' ? 'none' : s.status;
+    var itemNameEsc = s.item.replace(/'/g, "\\'");
+
+    return '<div class="schedule-row" style="--row-color: ' + rowColorVar + ';" role="button" tabindex="0" onclick="openFormDirect(\'' + itemNameEsc + '\')" onkeydown="if(event.key===\'Enter\')openFormDirect(\'' + itemNameEsc + '\')">' +
+      '<div class="row-lead">' + catChipHtml(s.item) + '<div><div class="item-name">' + s.item + '</div><div class="item-sub">' + sub + '</div>' + barHtml + '</div></div>' +
+      '<div><span class="col-label">Interval</span><span class="col-value">' + intervalLabel + '</span></div>' +
+      '<div><span class="col-label">' + dueColLabel + '</span><span class="col-value">' + dueColValue + '</span></div>' +
+      '<span class="status-pill ' + pillClass + '">' + dueLabel(s) + '</span>' +
+      '</div>';
+  }
+
+  var MORE_SCHEDULE_CUTOFF = 8;
+
+  function renderScheduleList(data) {
+    var currentOdometer = Number(data.settings.CurrentOdometer) || 0;
+    var statuses = computeScheduleStatus(data.serviceLog, data.serviceSchedule, currentOdometer);
+
+    var rank = { overdue: 0, soon: 1, ok: 2, none: 3 };
+    statuses.sort(function (a, b) {
+      if (rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+      var aKm = a.kmRemaining === null ? Infinity : a.kmRemaining;
+      var bKm = b.kmRemaining === null ? Infinity : b.kmRemaining;
+      return aKm - bKm;
+    });
+
+    var main = statuses.slice(0, MORE_SCHEDULE_CUTOFF);
+    var more = statuses.slice(MORE_SCHEDULE_CUTOFF);
+
+    document.getElementById('scheduleListMain').innerHTML = main.map(scheduleRowHtml).join('');
+    document.getElementById('moreScheduleList').innerHTML = more.map(scheduleRowHtml).join('');
+
+    var btn = document.getElementById('moreScheduleBtn');
+    if (more.length === 0) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.setAttribute('data-more-count', more.length);
+      var isOpen = document.getElementById('moreScheduleList').style.display === 'block';
+      btn.textContent = isOpen ? 'Show fewer items' : ('Show ' + more.length + ' more factory items');
+    }
+  }
+
+  // "As-needed & seasonal" items have no km/month interval, so they're
+  // rendered separately from computeScheduleStatus — just "last done".
+  function latestByServiceItem(serviceLog, itemName) {
+    var latest = null;
+    serviceLog.forEach(function (e) {
+      if (e.Category !== itemName) return;
+      if (!latest || Number(e.Odometer) > Number(latest.Odometer)) latest = e;
+    });
+    return latest;
+  }
+
+  function renderSeasonalList(serviceLog) {
+    var tireSwap = latestByServiceItem(serviceLog, 'Tire Swap');
+    document.getElementById('seasonalTireSwap').innerHTML = tireSwap
+      ? 'Last: ' + formatDateLong(tireSwap.Date) + (tireSwap.Odometer ? ' &middot; ' + formatOdometer(tireSwap.Odometer) + ' km' : '')
+      : 'No record on file';
+
+    var alignment = latestByServiceItem(serviceLog, 'Alignment');
+    document.getElementById('seasonalAlignment').innerHTML = alignment
+      ? 'Last: ' + formatDateLong(alignment.Date) + (alignment.Odometer ? ' &middot; ' + formatOdometer(alignment.Odometer) + ' km' : '')
+      : 'No record on file';
+
+    var timingChain = latestByServiceItem(serviceLog, 'Timing Chain');
+    document.getElementById('seasonalTimingChain').innerHTML = timingChain
+      ? 'Last: ' + formatDateLong(timingChain.Date) + (timingChain.Odometer ? ' &middot; ' + formatOdometer(timingChain.Odometer) + ' km' : '') + ' &mdash; watch for cold-start rattle'
+      : 'No record on file';
+
+    var bearings = latestByServiceItem(serviceLog, 'Front Wheel Bearings');
+    document.getElementById('seasonalFrontWheelBearings').innerHTML = bearings
+      ? 'Replaced ' + formatDateLong(bearings.Date) + (bearings.Odometer ? ' &middot; ' + formatOdometer(bearings.Odometer) + ' km' : '') + ' &mdash; watch opposite side'
+      : 'No record on file';
+  }
+
+  function modRowHtml(mod) {
+    var sub = [mod.Category, mod.Date ? formatDateLong(mod.Date) : null, mod.Odometer ? formatOdometer(mod.Odometer) + ' km' : null].filter(Boolean).join(' &middot; ');
+    return '<div class="mod-row" data-cost="' + (Number(mod.Cost) || 0) + '" data-status="installed" data-entry-id="' + mod.EntryID + '" data-source="mod">' +
+      '<div class="row-lead">' + catChipHtml(mod.Modification || mod.Category) + '<div><div class="item-name">' + (mod.Modification || 'Untitled modification') + '</div><div class="item-sub">' + (sub || 'No details') + '</div></div></div>' +
+      '<div><span class="col-label">Details</span><span class="col-value">' + (mod.Details || '&mdash;') + '</span></div>' +
+      '<div style="display:flex; align-items:center; gap:6px;">' +
+        costTagHtml(mod.Cost) +
+        '<span class="mod-badge installed">Installed</span>' +
+        '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+      '</div></div>';
+  }
+
+  function renderModList(modifications) {
+    document.getElementById('modList').innerHTML = modifications.map(modRowHtml).join('');
+    recalcModCount();
+  }
+
+  function recalcModCount() {
+    var installed = 0, planned = 0;
+    document.querySelectorAll('#modList .mod-row:not(.voided)').forEach(function (row) {
+      if (row.getAttribute('data-status') === 'installed') installed++; else planned++;
+    });
+    var html = installed + (planned > 0 ? ' <span style="font-size:13px;color:var(--text-faint);font-family:\'Inter\',sans-serif;font-weight:400;">+' + planned + ' planned</span>' : '');
+    document.getElementById('qsModifications').innerHTML = html;
+  }
+
+  function activityRowHtml(entry) {
+    return '<div class="activity-row" data-cost="' + (Number(entry.Cost) || 0) + '" data-entry-id="' + entry.EntryID + '" data-source="service">' +
+      '<div class="activity-row-inner">' +
+        '<div class="activity-left">' + catChipHtml(entry.Category, 'sm') +
+          '<span class="activity-date">' + formatDateShort(entry.Date) + '</span>' +
+          '<span class="activity-cat">' + (entry.Category || 'Other') + '</span>' +
+          '<span class="activity-desc">' + (entry.Description || '') + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; gap:10px;">' +
+          '<span class="activity-odo">' + (entry.Odometer ? formatOdometer(entry.Odometer) + ' km' : 'no odo') + '</span>' +
+          costTagHtml(entry.Cost) +
+          '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+        '</div>' +
+      '</div></div>';
+  }
+
+  var ACTIVITY_LIST_LIMIT = 25;
+
+  function renderActivityList(serviceLog) {
+    var sorted = serviceLog.slice().sort(function (a, b) {
+      // Newest first — prefer Date, fall back to Odometer for undated rows.
+      var da = a.Date ? new Date(a.Date).getTime() : NaN;
+      var db = b.Date ? new Date(b.Date).getTime() : NaN;
+      if (!isNaN(da) && !isNaN(db) && da !== db) return db - da;
+      if (!isNaN(da) && isNaN(db)) return -1;
+      if (isNaN(da) && !isNaN(db)) return 1;
+      return Number(b.Odometer) - Number(a.Odometer);
+    });
+    document.getElementById('activityList').innerHTML = sorted.slice(0, ACTIVITY_LIST_LIMIT).map(activityRowHtml).join('');
+  }
+
+  function renderAll(data) {
+    STATE = data;
+    renderOdometer(data.settings);
+    renderQuickStats(data);
+    renderScheduleList(data);
+    renderSeasonalList(data.serviceLog);
+    renderModList(data.modifications);
+    renderActivityList(data.serviceLog);
+    recalcCostTotals();
+  }
+
+  function boot() {
+    apiGet('bootstrap', { vehicleId: VEHICLE_ID }).then(function (res) {
+      if (res.ok) {
+        renderAll(res.data);
+      } else {
+        console.error('bootstrap failed:', res.error);
+        showToast('Could not load live data — ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — check your connection');
+    });
   }
 
   function openCategoryPicker() {
@@ -1956,7 +2050,8 @@
     var btn = document.getElementById('moreScheduleBtn');
     var open = list.style.display === 'block';
     list.style.display = open ? 'none' : 'block';
-    btn.textContent = open ? 'Show 16 more factory items (incl. Wiper Blades)' : 'Show fewer items';
+    var count = btn.getAttribute('data-more-count') || '0';
+    btn.textContent = open ? ('Show ' + count + ' more factory items') : 'Show fewer items';
   }
   function updateMileage() {
     var input = document.getElementById('odoInput');
@@ -1974,6 +2069,29 @@
   function deleteRow(btn) {
     var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row');
     if (!row) return;
+    var entryId = row.getAttribute('data-entry-id');
+    var source = row.getAttribute('data-source'); // 'service' | 'mod' — present only on real, backend-loaded rows
+
+    if (entryId && source) {
+      if (!confirm('Remove this entry? This voids it in the Google Sheet — there\'s no undo from here.')) return;
+      var action = source === 'service' ? 'voidServiceLogEntry' : 'voidModification';
+      apiPost(action, { vehicleId: VEHICLE_ID, entryId: entryId }).then(function (res) {
+        if (res.ok) {
+          showToast('Entry removed');
+          boot();
+        } else {
+          showToast('Could not remove entry: ' + (res.error || 'unknown error'));
+        }
+      }).catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend to remove this entry');
+      });
+      return;
+    }
+
+    // Local-only rows (fuel, parts, custom tasks, session-only "planned"
+    // mods) have no backend record — just toggle a visual voided/undo state,
+    // same as the original preview behavior.
     var voided = row.classList.toggle('voided');
     if (voided) {
       btn.innerHTML = 'Undo';
@@ -1986,6 +2104,7 @@
     }
     recalcCostTotals();
     recalcFuelStats();
+    recalcModCount();
   }
 
   function fmtMoney(n) {
@@ -2211,32 +2330,38 @@
     var date = document.getElementById('entryDate').value;
     var odo = document.getElementById('entryOdo').value;
     var desc = document.getElementById('entryDesc').value || category;
+    var qtyParts = document.getElementById('entryQtyParts').value;
     var cost = document.getElementById('entryCost').value;
+    var performedBy = document.getElementById('entryPerformedBy').value;
+    var owner = document.getElementById('entryOwner').value;
+    var notes = document.getElementById('entryNotes').value;
 
-    var row = document.createElement('div');
-    row.className = 'activity-row';
-    row.setAttribute('data-cost', Number(cost) || 0);
-    row.innerHTML =
-      '<div class="activity-row-inner">' +
-        '<div class="activity-left">' +
-          catChipHtml(category, 'sm') +
-          '<span class="activity-date">' + formatDateShort(date) + '</span>' +
-          '<span class="activity-cat">' + category + '</span>' +
-          '<span class="activity-desc">' + desc + '</span>' +
-        '</div>' +
-        '<div style="display:flex; align-items:center; gap:10px;">' +
-          '<span class="activity-odo">' + (odo ? Number(odo).toLocaleString() + ' km' : 'no odo') + '</span>' +
-          costTagHtml(cost) +
-          '<button class="row-delete-btn" onclick="deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
-        '</div>' +
-      '</div>';
+    var saveBtn = document.getElementById('entrySaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-    var list = document.getElementById('activityList');
-    list.insertBefore(row, list.firstChild);
-
-    recalcCostTotals();
-    closeSheet('addSheet');
-    document.getElementById('formView').reset();
+    apiPost('addServiceLogEntry', {
+      vehicleId: VEHICLE_ID,
+      entry: {
+        date: date, odometer: odo, category: category, description: desc,
+        qtyParts: qtyParts, cost: cost, performedBy: performedBy, owner: owner, notes: notes
+      }
+    }).then(function (res) {
+      if (res.ok) {
+        showToast('Entry saved to the Sheet');
+        closeSheet('addSheet');
+        document.getElementById('formView').reset();
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — entry was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save entry';
+    });
   }
 
   function submitModForm(e) {
@@ -2244,33 +2369,64 @@
     var name = document.getElementById('modName').value || 'Untitled modification';
     var category = document.getElementById('modCategory').value;
     var installed = document.getElementById('modStatusInstalled').checked;
+    var date = document.getElementById('modDate').value;
+    var odo = document.getElementById('modOdo').value;
     var details = document.getElementById('modDetails').value || 'No details entered';
     var cost = document.getElementById('modCost').value;
+    var installedBy = document.getElementById('modInstalledBy').value;
+    var notes = document.getElementById('modNotes').value;
 
+    if (installed) {
+      var saveBtn = document.getElementById('modSaveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+      apiPost('addModification', {
+        vehicleId: VEHICLE_ID,
+        entry: { date: date, odometer: odo, modification: name, category: category, details: details, cost: cost, installedBy: installedBy, notes: notes }
+      }).then(function (res) {
+        if (res.ok) {
+          showToast('Modification saved to the Sheet');
+          closeSheet('modSheet');
+          document.querySelector('#modSheet form').reset();
+          currentEditingModRow = null;
+          boot();
+        } else {
+          showToast('Could not save: ' + (res.error || 'unknown error'));
+        }
+      }).catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend — modification was not saved');
+      }).finally(function () {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save modification';
+      });
+      return;
+    }
+
+    // Planned mods have no field in the Modifications sheet yet, so these
+    // stay local to this browser session only (same as the original
+    // preview). They get no data-entry-id/data-source, so deleteRow()
+    // treats them as local rows rather than trying to void a Sheet row.
     if (currentEditingModRow) {
       currentEditingModRow.querySelector('.item-name').textContent = name;
-      currentEditingModRow.querySelector('.item-sub').textContent = category;
+      currentEditingModRow.querySelector('.item-sub').textContent = category + ' · planned';
       currentEditingModRow.querySelector('.col-value').textContent = details;
-      var badge = currentEditingModRow.querySelector('.mod-badge');
-      badge.textContent = installed ? 'Installed' : 'Planned';
-      badge.className = 'mod-badge ' + (installed ? 'installed' : 'planned');
       currentEditingModRow.setAttribute('data-cost', Number(cost) || 0);
-      currentEditingModRow.setAttribute('data-status', installed ? 'installed' : 'planned');
       var costTag = currentEditingModRow.querySelector('.cost-tag');
-      if (costTag) { costTag.outerHTML = costTagHtml(cost, installed ? 'no cost logged' : 'no estimate'); }
+      if (costTag) { costTag.outerHTML = costTagHtml(cost, 'no estimate'); }
     } else {
       var row = document.createElement('div');
       row.className = 'mod-row';
       row.setAttribute('role', 'button');
       row.setAttribute('tabindex', '0');
       row.setAttribute('data-cost', Number(cost) || 0);
-      row.setAttribute('data-status', installed ? 'installed' : 'planned');
+      row.setAttribute('data-status', 'planned');
       row.innerHTML =
-        '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + category + '</div></div></div>' +
+        '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + category + ' &middot; planned</div></div></div>' +
         '<div><span class="col-label">Details</span><span class="col-value">' + details + '</span></div>' +
         '<div style="display:flex; align-items:center; gap:6px;">' +
-          costTagHtml(cost, installed ? 'no cost logged' : 'no estimate') +
-          '<span class="mod-badge ' + (installed ? 'installed' : 'planned') + '">' + (installed ? 'Installed' : 'Planned') + '</span>' +
+          costTagHtml(cost, 'no estimate') +
+          '<span class="mod-badge planned">Planned</span>' +
           '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
         '</div>';
       row.onclick = function () { openModForm(name, row); };
@@ -2278,7 +2434,10 @@
     }
 
     recalcCostTotals();
+    recalcModCount();
     closeSheet('modSheet');
+    document.querySelector('#modSheet form').reset();
+    currentEditingModRow = null;
   }
 
   function deleteFromForm() {
@@ -2287,6 +2446,7 @@
       var delBtn = currentEditingModRow.querySelector('.row-delete-btn');
       delBtn.innerHTML = 'Undo';
       delBtn.classList.add('is-undo');
+      recalcModCount();
     }
     closeSheet('modSheet');
   }
@@ -2336,6 +2496,7 @@
   recalcCostTotals();
   recalcFuelStats();
   renderSgiCard();
+  boot();
 </script>
 
 </body>
