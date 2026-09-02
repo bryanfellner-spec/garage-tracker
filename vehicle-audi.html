@@ -2332,8 +2332,16 @@
       var ownedForText = (wholeYears > 0 ? wholeYears + ' yr' + (wholeYears === 1 ? '' : 's') : '') +
         (months > 0 ? ' ' + months + ' mo' : (wholeYears === 0 ? 'under 1 mo' : ''));
       document.getElementById('statOwnedFor').textContent = ownedForText || '—';
-      var perYear = years >= 0.08 ? totalInvested / years : totalInvested;
-      document.getElementById('costPerYearDisplay').textContent = fmtMoney(perYear) + ' / yr';
+      // Annualizing total spend over a very short ownership window produces
+      // a wildly inflated "/ yr" figure (e.g. $13k spent in 2 months reads
+      // as ~$92k/yr). Until a full year of ownership has passed, show the
+      // actual amount spent so far instead of extrapolating it.
+      if (years >= 1) {
+        var perYear = totalInvested / years;
+        document.getElementById('costPerYearDisplay').textContent = fmtMoney(perYear) + ' / yr';
+      } else {
+        document.getElementById('costPerYearDisplay').textContent = fmtMoney(totalInvested) + ' so far';
+      }
       document.getElementById('costPerYearDisplay').classList.remove('muted');
     } else {
       document.getElementById('statOwnedFor').textContent = '—';
