@@ -751,6 +751,33 @@
   .tire-set-stat .label { color: var(--text-faint); }
   .tire-set-stat .value { color: var(--text); font-variant-numeric: tabular-nums; }
   .tire-set-stat .value.muted { color: var(--text-faint); font-style: italic; }
+  .tread-input-wrap { display: flex; align-items: center; gap: 4px; }
+  .tread-input {
+    width: 44px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    padding: 0 0 2px 0;
+  }
+  .tread-input:focus { outline: none; border-bottom-color: var(--accent); }
+  .tread-input::placeholder { color: var(--text-faint); font-style: italic; }
+  .tire-set-reset-row { text-align: right; margin-top: 4px; }
+  .tire-set-reset-link {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+  .tire-set-reset-link:hover { color: var(--text-muted); }
   .tire-set-caveat {
     font-size: 11px;
     color: var(--status-soon);
@@ -1479,6 +1506,10 @@
           <input type="number" step="0.01" id="tireSwapCost" placeholder="e.g. if new tires">
         </div>
       </div>
+      <div class="form-field" style="display:flex; align-items:center; gap:8px; margin-top:-2px;">
+        <input type="checkbox" id="tireSwapIsNew" style="width:auto;">
+        <label style="margin:0; font-size:13px; color:var(--text-muted);" for="tireSwapIsNew">Brand new tires — reset this set's cumulative km to 0</label>
+      </div>
       <div class="form-field">
         <label>Notes</label>
         <textarea id="tireSwapNotes" placeholder="optional"></textarea>
@@ -1826,13 +1857,19 @@
   function renderQuickStats(data) {
     var serviceLog = data.serviceLog;
     var oilChanges = serviceLog.filter(function (e) { return e.Category === 'Oil Change'; }).length;
-    var maxOdo = Number(data.settings.CurrentOdometer) || 0;
-    serviceLog.forEach(function (e) { if (Number(e.Odometer) > maxOdo) maxOdo = Number(e.Odometer); });
-    data.modifications.forEach(function (e) { if (Number(e.Odometer) > maxOdo) maxOdo = Number(e.Odometer); });
 
     document.getElementById('qsServiceRecords').textContent = serviceLog.length;
     document.getElementById('qsOilChanges').textContent = oilChanges;
-    document.getElementById('qsLatestOdometer').textContent = formatOdometer(maxOdo);
+    // "Latest odometer on file" mirrors the header odometer exactly —
+    // both read Settings.CurrentOdometer, the single authoritative value
+    // that the Quick Update box (and syncOdometerIfHigher_ on every new
+    // logged entry) keeps current. Previously this also max()'d across
+    // every ServiceLog/Modification row ever logged, which meant an old,
+    // known-bad entry (e.g. an undated migration-era odometer guess)
+    // could outrank a deliberate, more-accurate correction made via
+    // Quick Update — showing two different "current" numbers on the same
+    // page. CurrentOdometer is the single source of truth now.
+    document.getElementById('qsLatestOdometer').textContent = formatOdometer(Number(data.settings.CurrentOdometer) || 0);
     // Modifications count (installed vs. locally-planned) is finished by
     // recalcModCount() after renderModList() builds the DOM rows.
   }
@@ -2054,7 +2091,15 @@
   // and any stint with a decreasing odometer (a known data-quality issue —
   // see the migration notes) is excluded from cumulative km, same as the
   // original preview's caveat.
-  function computeTireSets(serviceLog, currentOdometer) {
+  // resetOdo: optional { summer: <odometer>, winter: <odometer> } — when a
+  // type has a reset point (set via the "Brand new tires" checkbox on the
+  // swap form, or the card's "Reset" link), any stint that started before
+  // that odometer is excluded from cumulative km. This is how a fresh set
+  // of tires gets to start back at 0 km without deleting or rewriting the
+  // ServiceLog history that the rest of the app (and older stints for the
+  // *other* tire type) still depends on.
+  function computeTireSets(serviceLog, currentOdometer, resetOdo) {
+    resetOdo = resetOdo || {};
     var swaps = serviceLog
       .filter(function (e) { return e.Category === 'Tire Swap' && e.Date; })
       .map(function (e) {
@@ -2072,7 +2117,8 @@
       stats[s.type].lastMount = s;
       var nextOdo = (i + 1 < swaps.length) ? swaps[i + 1].odometer : currentOdometer;
       var stintKm = nextOdo - s.odometer;
-      if (stintKm > 0) stats[s.type].cumulative += stintKm;
+      var cutoff = Number(resetOdo[s.type]) || 0;
+      if (stintKm > 0 && s.odometer >= cutoff) stats[s.type].cumulative += stintKm;
     });
 
     var onCarType = swaps[swaps.length - 1].type;
@@ -2080,7 +2126,20 @@
     return { onCarType: onCarType, storedType: storedType, stats: stats };
   }
 
-  function tireSetCardHtml(type, stats, currentOdometer, isOnCar) {
+  function treadDepthRowHtml(type, tread) {
+    var value = tread.depth !== null && tread.depth !== undefined && tread.depth !== ''
+      ? tread.depth : '';
+    var asOfHtml = value !== '' && tread.asOf
+      ? ' <span class="value muted" style="font-size:11px;">(' + formatDateShort(tread.asOf) + ')</span>' : '';
+    return '<div class="tire-set-stat"><span class="label">Tread depth</span><span class="value">' +
+      '<span class="tread-input-wrap">' +
+      '<input type="number" step="0.1" min="0" class="tread-input" placeholder="mm" value="' + value + '" ' +
+      'onchange="saveTreadDepth(\'' + type + '\', this.value)" title="Enter measured tread depth in mm">mm' +
+      '</span>' + asOfHtml +
+      '</span></div>';
+  }
+
+  function tireSetCardHtml(type, stats, currentOdometer, isOnCar, tread) {
     var label = type === 'winter' ? 'Winter Set' : 'Summer Set';
     var last = stats.lastMount;
     var badge = isOnCar ? '<span class="tire-set-badge on-car">On car</span>' : '<span class="tire-set-badge stored">In storage</span>';
@@ -2089,15 +2148,24 @@
     var stintRow = isOnCar && last
       ? '<div class="tire-set-stat"><span class="label">km on this stint</span><span class="value">' + formatOdometer(currentOdometer - last.odometer) + ' km</span></div>'
       : '';
+    var resetRow = stats.cumulative > 0
+      ? '<div class="tire-set-reset-row"><button type="button" class="tire-set-reset-link" onclick="resetTireCumulative(\'' + type + '\')">Reset cumulative km to 0</button></div>'
+      : '';
     return '<div class="tire-set-card">' +
       '<div class="tire-set-head"><span class="tire-set-name">' + label + '</span>' + badge + '</div>' +
       '<div class="tire-set-stat"><span class="label">' + lastLabel + '</span><span class="value">' + lastValue + '</span></div>' +
       stintRow +
       '<div class="tire-set-stat"><span class="label">Cumulative km</span><span class="value">~' + formatOdometer(stats.cumulative) + ' km</span></div>' +
-      '<div class="tire-set-stat"><span class="label">Tread depth</span><span class="value muted">not recorded</span></div>' +
+      treadDepthRowHtml(type, tread) +
+      resetRow +
       '</div>';
   }
 
+  // Tread depth and the cumulative-km reset point are single values per
+  // tire type, so — same pattern as TrackTireSets/PurchasePrice/RegType —
+  // they live as plain Settings rows rather than a new tab: TreadDepthSummer,
+  // TreadDepthSummerAsOf, TreadDepthWinter, TreadDepthWinterAsOf,
+  // TireResetOdoSummer, TireResetOdoWinter.
   function renderTireSets(data) {
     var tracking = data.settings.TrackTireSets !== 'false'; // default on if never set
     document.getElementById('winterRimsToggle').checked = tracking;
@@ -2106,15 +2174,73 @@
     if (!tracking) return;
 
     var currentOdometer = Number(data.settings.CurrentOdometer) || 0;
-    var result = computeTireSets(data.serviceLog, currentOdometer);
+    var resetOdo = {
+      summer: data.settings.TireResetOdoSummer,
+      winter: data.settings.TireResetOdoWinter
+    };
+    var result = computeTireSets(data.serviceLog, currentOdometer, resetOdo);
     var grid = document.getElementById('tireSetGrid');
     if (!result) {
       grid.innerHTML = '<p class="section-note">No dated Tire Swap entries logged yet — log one below to start tracking.</p>';
       return;
     }
+    var treadByType = {
+      summer: { depth: data.settings.TreadDepthSummer, asOf: data.settings.TreadDepthSummerAsOf },
+      winter: { depth: data.settings.TreadDepthWinter, asOf: data.settings.TreadDepthWinterAsOf }
+    };
     grid.innerHTML =
-      tireSetCardHtml(result.onCarType, result.stats[result.onCarType], currentOdometer, true) +
-      tireSetCardHtml(result.storedType, result.stats[result.storedType], currentOdometer, false);
+      tireSetCardHtml(result.onCarType, result.stats[result.onCarType], currentOdometer, true, treadByType[result.onCarType]) +
+      tireSetCardHtml(result.storedType, result.stats[result.storedType], currentOdometer, false, treadByType[result.storedType]);
+  }
+
+  function capitalize_(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // Inline-editable tread depth reading for either set, saved straight to
+  // Settings (see renderTireSets note above) — no swap/service entry needed
+  // just to record a fresh measurement.
+  function saveTreadDepth(type, value) {
+    var key = 'TreadDepth' + capitalize_(type);
+    var todayStr = new Date().toISOString().slice(0, 10);
+    if (value === '') {
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: key, value: '' }).then(function () { boot(); });
+      return;
+    }
+    apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: key, value: value })
+      .then(function (res) {
+        if (!res.ok) { showToast('Could not save tread depth: ' + (res.error || 'unknown error')); return; }
+        return apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: key + 'AsOf', value: todayStr });
+      })
+      .then(function () {
+        showToast('Tread depth saved');
+        boot();
+      })
+      .catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend — tread depth was not saved');
+      });
+  }
+
+  // Manual reset for a set whose cumulative km is wrong right now (e.g. an
+  // already-logged swap wasn't marked "brand new tires" at the time). Moves
+  // that type's reset point to its last-known mount odometer (or the
+  // current odometer if it's never been logged), so cumulative recomputes
+  // to 0 going forward without touching any ServiceLog row.
+  function resetTireCumulative(type) {
+    if (!confirm('Reset cumulative km for the ' + (type === 'winter' ? 'Winter' : 'Summer') + ' Set to 0?')) return;
+    var currentOdometer = Number(STATE.settings.CurrentOdometer) || 0;
+    var resetOdo = { summer: STATE.settings.TireResetOdoSummer, winter: STATE.settings.TireResetOdoWinter };
+    var result = computeTireSets(STATE.serviceLog, currentOdometer, resetOdo);
+    var last = result && result.stats[type] && result.stats[type].lastMount;
+    var odo = last ? last.odometer : currentOdometer;
+    apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'TireResetOdo' + capitalize_(type), value: odo })
+      .then(function (res) {
+        if (res.ok) { showToast('Cumulative km reset'); boot(); }
+        else showToast('Could not reset: ' + (res.error || 'unknown error'));
+      })
+      .catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend — reset was not saved');
+      });
   }
 
   function submitTireSwapForm(e) {
@@ -2125,7 +2251,14 @@
     var tread = document.getElementById('tireSwapTread').value;
     var cost = document.getElementById('tireSwapCost').value;
     var notes = document.getElementById('tireSwapNotes').value;
+    var isNew = document.getElementById('tireSwapIsNew').checked;
     var fullNotes = (tread ? 'Tread depth of outgoing set: ' + tread + 'mm. ' : '') + (notes || '');
+
+    // Type now being mounted vs. the type coming off — used to route the
+    // tread-depth-of-outgoing-set reading, and the "brand new" reset, to
+    // the correct set's Settings keys (see renderTireSets note).
+    var incomingType = setName === 'Winter Set' ? 'winter' : 'summer';
+    var outgoingType = incomingType === 'winter' ? 'summer' : 'winter';
 
     var saveBtn = document.getElementById('tireSwapSaveBtn');
     saveBtn.disabled = true;
@@ -2135,17 +2268,30 @@
       vehicleId: VEHICLE_ID,
       entry: {
         date: date, odometer: odo, category: 'Tire Swap',
-        description: setName + ' mounted', cost: cost, notes: fullNotes
+        description: setName + ' mounted' + (isNew ? ' (new tires)' : ''), cost: cost, notes: fullNotes
       }
     }).then(function (res) {
-      if (res.ok) {
+      if (!res.ok) { showToast('Could not save: ' + (res.error || 'unknown error')); return; }
+
+      var followUps = [];
+      // The tread reading taken off the outgoing set is a real measurement —
+      // persist it as that set's current tread depth, not just buried in notes.
+      if (tread) {
+        followUps.push(apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'TreadDepth' + capitalize_(outgoingType), value: tread }));
+        followUps.push(apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'TreadDepth' + capitalize_(outgoingType) + 'AsOf', value: date || new Date().toISOString().slice(0, 10) }));
+      }
+      // Brand new tires going on now: reset that set's cumulative km to 0
+      // from this odometer forward.
+      if (isNew && odo) {
+        followUps.push(apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'TireResetOdo' + capitalize_(incomingType), value: odo }));
+      }
+
+      return Promise.all(followUps).then(function () {
         showToast('Tire swap saved to the Sheet');
         closeSheet('tireSheet');
         document.getElementById('tireSwapForm').reset();
         boot();
-      } else {
-        showToast('Could not save: ' + (res.error || 'unknown error'));
-      }
+      });
     }).catch(function (err) {
       console.error(err);
       showToast('Could not reach the backend — swap was not saved');
