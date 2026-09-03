@@ -715,7 +715,7 @@
     reader.onload = function () {
       var base64 = reader.result.split(',')[1];
       showToast('Uploading photo…');
-      apiPost('uploadPhoto', { vehicleId: vehicleId, imageData: base64, mimeType: file.type, fileName: file.name })
+      apiPost('uploadPhoto', { vehicleId: vehicleId, imageData: base64, mimeType: file.type, fileName: file.name, settingKey: 'CardPhotoUrl' })
         .then(function (res) {
           if (res.ok) {
             applyVehiclePhoto(imgId, iconId, res.url);
@@ -844,7 +844,12 @@
     document.getElementById('audiEntryCount').textContent = serviceLog.length + ' entries';
     document.getElementById('fleetEntryCount').textContent = serviceLog.length;
 
-    if (settings.PhotoUrl) applyVehiclePhoto('audiPhotoImg', 'audiCarIcon', settings.PhotoUrl);
+    // Card thumbnail uses its own CardPhotoUrl setting when set, so it can
+    // differ from the vehicle detail page's hero photo (PhotoUrl). Falls
+    // back to PhotoUrl so a vehicle with only a legacy single photo still
+    // shows it on the card until a distinct card photo is uploaded.
+    var cardPhoto = settings.CardPhotoUrl || settings.PhotoUrl;
+    if (cardPhoto) applyVehiclePhoto('audiPhotoImg', 'audiCarIcon', cardPhoto);
   }
 
   function boot() {
