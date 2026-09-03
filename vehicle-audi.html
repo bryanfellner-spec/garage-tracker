@@ -1179,6 +1179,17 @@
 
   <div class="section">
     <div class="section-head">
+      <h2 class="section-title">Upcoming / To-do</h2>
+      <button class="section-add-btn" onclick="openScheduleTaskForm()">+ Add to-do</button>
+    </div>
+    <div class="seasonal-list" id="todoList">
+      <p class="section-note">Nothing on the list right now.</p>
+    </div>
+    <p class="section-note" style="margin-top:8px;">Things you know need doing but haven't done yet. Tap an item once it's done to log it — it'll drop off this list automatically.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
       <h2 class="section-title">Tire Sets</h2>
       <div class="toggle-row">
         <span class="toggle-label-text">Separate winter rims</span>
@@ -1526,8 +1537,8 @@
 <div class="sheet-backdrop" id="scheduleTaskSheet" onclick="if(event.target===this)closeSheet('scheduleTaskSheet')">
   <div class="sheet">
     <form onsubmit="submitTaskForm(event)">
-      <h3 class="sheet-title">Add a scheduled task</h3>
-      <p class="sheet-sub">Defines a new recurring item — separate from logging work that's already done.</p>
+      <h3 class="sheet-title">Add a task</h3>
+      <p class="sheet-sub">Give it an interval (km and/or months) for a recurring item, or leave both blank for a one-off to-do — separate from logging work that's already done.</p>
 
       <div class="form-field">
         <label>Task name</label>
@@ -1561,11 +1572,11 @@
       </div>
       <div class="form-field">
         <label>Notes / source</label>
-        <textarea placeholder="optional — why this interval, where it came from"></textarea>
+        <textarea id="taskNotes" placeholder="optional — why this interval, where it came from, or details for a to-do"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('scheduleTaskSheet')">Cancel</button>
-        <button type="submit" class="btn-save">Add to schedule</button>
+        <button type="submit" class="btn-save">Save task</button>
       </div>
     </form>
   </div>
@@ -2303,8 +2314,16 @@
 
   var currentEditingEntryId = null;
 
+  // Set only when the log-entry form was opened from an "Upcoming / To-do"
+  // row — holds that CustomTasks row's TaskID so, on a successful save,
+  // submitEntryForm can void the completed to-do (it's now captured in
+  // ServiceLog history instead). Reset to null on every other form-open
+  // path so it never leaks onto an unrelated entry.
+  var pendingTodoVoidId = null;
+
   function openCategoryPicker() {
     currentEditingEntryId = null;
+    pendingTodoVoidId = null;
     document.getElementById('formView').reset();
     document.getElementById('entrySaveBtn').textContent = 'Save entry';
     document.getElementById('categoryView').style.display = 'block';
@@ -2313,6 +2332,7 @@
   }
   function selectCategory(name) {
     currentEditingEntryId = null;
+    pendingTodoVoidId = null;
     document.getElementById('formView').reset();
     document.getElementById('entryCategory').value = name;
     document.getElementById('formTitle').textContent = 'Log: ' + name;
@@ -2320,8 +2340,9 @@
     document.getElementById('categoryView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
   }
-  function openFormDirect(name) {
+  function openFormDirect(name, todoTaskId) {
     currentEditingEntryId = null;
+    pendingTodoVoidId = todoTaskId || null;
     document.getElementById('formView').reset();
     document.getElementById('entryCategory').value = name;
     document.getElementById('formTitle').textContent = 'Log: ' + name;
@@ -2341,6 +2362,7 @@
     if (!entry) return;
 
     currentEditingEntryId = entryId;
+    pendingTodoVoidId = null;
     document.getElementById('entryCategory').value = entry.Category || '';
     document.getElementById('formTitle').textContent = 'Edit: ' + (entry.Category || 'entry');
     document.getElementById('entryDate').value = entry.Date || '';
@@ -2485,7 +2507,7 @@
   };
 
   function deleteRow(btn) {
-    var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row');
+    var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row, .todo-row');
     if (!row) return;
     var entryId = row.getAttribute('data-entry-id');
     var source = row.getAttribute('data-source'); // present only on real, backend-loaded rows
@@ -2849,7 +2871,15 @@
         closeSheet('addSheet');
         document.getElementById('formView').reset();
         currentEditingEntryId = null;
-        boot();
+        var todoIdToClear = pendingTodoVoidId;
+        pendingTodoVoidId = null;
+        if (!isEdit && todoIdToClear) {
+          apiPost('voidCustomTask', { vehicleId: VEHICLE_ID, entryId: todoIdToClear }).catch(function (err) {
+            console.error('Entry saved, but could not clear the completed to-do:', err);
+          }).finally(boot);
+        } else {
+          boot();
+        }
       } else {
         showToast('Could not save: ' + (res.error || 'unknown error'));
       }
@@ -3046,8 +3076,28 @@
     '</div>';
   }
 
+  // CustomTasks with neither IntervalKm nor IntervalMonths aren't recurring
+  // schedule items — they're one-off to-dos (blueprint's ServiceSchedule
+  // "Wear / On-symptom" concept, but user-added). Rendered separately below
+  // as clickable rows: tap to log the completed work (auto-clears the
+  // to-do), or use the trash icon to drop it without logging.
+  function todoRowHtml(task) {
+    var nameEsc = String(task.TaskName).replace(/'/g, "\\'");
+    return '<div class="seasonal-row todo-row" data-entry-id="' + task.TaskID + '" data-source="task" role="button" tabindex="0" ' +
+      'onclick="openFormDirect(\'' + nameEsc + '\', \'' + task.TaskID + '\')" ' +
+      'onkeydown="if(event.key===\'Enter\')openFormDirect(\'' + nameEsc + '\', \'' + task.TaskID + '\')">' +
+      '<span class="row-lead">' + catChipHtml(task.TaskName) + '<div><div class="item-name">' + task.TaskName + '</div><div class="item-sub">' + (task.Notes || 'Tap when done to log it') + '</div></div></span>' +
+      '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
+    '</div>';
+  }
+
   function renderCustomTasksList(customTasks) {
-    document.getElementById('customTaskList').innerHTML = customTasks.map(customTaskRowHtml).join('');
+    var recurring = customTasks.filter(function (t) { return t.IntervalKm || t.IntervalMonths; });
+    var todos = customTasks.filter(function (t) { return !t.IntervalKm && !t.IntervalMonths; });
+    document.getElementById('customTaskList').innerHTML = recurring.map(customTaskRowHtml).join('');
+    document.getElementById('todoList').innerHTML = todos.length
+      ? todos.map(todoRowHtml).join('')
+      : '<p class="section-note">Nothing on the list right now.</p>';
   }
 
   function submitTaskForm(e) {
@@ -3056,6 +3106,7 @@
     var km = document.getElementById('taskKm').value;
     var months = document.getElementById('taskMonths').value;
     var group = document.getElementById('taskGroup').value;
+    var notes = document.getElementById('taskNotes').value;
 
     var saveBtn = document.getElementById('scheduleTaskSheet').querySelector('.btn-save');
     saveBtn.disabled = true;
@@ -3063,14 +3114,15 @@
 
     apiPost('addCustomTask', {
       vehicleId: VEHICLE_ID,
-      entry: { taskName: name, intervalKm: km, intervalMonths: months, group: group }
+      entry: { taskName: name, intervalKm: km, intervalMonths: months, group: group, notes: notes }
     }).then(function (res) {
       if (res.ok) {
-        showToast('Custom task saved to the Sheet');
+        showToast(km || months ? 'Task saved to the Sheet' : 'Added to your to-do list');
         closeSheet('scheduleTaskSheet');
         document.getElementById('taskName').value = '';
         document.getElementById('taskKm').value = '';
         document.getElementById('taskMonths').value = '';
+        document.getElementById('taskNotes').value = '';
         boot();
       } else {
         showToast('Could not save: ' + (res.error || 'unknown error'));
