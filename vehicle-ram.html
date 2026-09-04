@@ -1991,6 +1991,17 @@
     // recalcModCount() after renderModList() builds the DOM rows.
   }
 
+  // JSON.stringify produces a double-quoted JS string literal — safe to
+  // embed inside a single-quoted attribute, but our onclick attributes
+  // are double-quoted, so the embedded quotes need HTML-entity-escaping
+  // first or they prematurely close the attribute and corrupt the
+  // button's markup (silently breaking the click handler).
+  function jsStringForAttr(value) {
+    return JSON.stringify(value === undefined || value === null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;');
+  }
+
   // Category -> plain-language due label helper shared by schedule rows.
   function dueLabel(s) {
     if (s.status === 'none') return 'No record';
@@ -2049,9 +2060,9 @@
     // live in a different tab with their own add/delete actions, no
     // edit action yet.
     var editBtnHtml = s.isCustom ? '' :
-      '<button class="row-edit-btn" onclick="event.stopPropagation(); openScheduleEditForm(\'' + itemNameEsc + '\', ' +
-      JSON.stringify(s.intervalKm || '') + ', ' + JSON.stringify(s.intervalMonths || '') + ', ' +
-      JSON.stringify(s.partNumber || '') + ', ' + JSON.stringify(s.torqueSpec || '') + ', ' + JSON.stringify(s.notes || '') +
+      '<button class="row-edit-btn" onclick="event.stopPropagation(); openScheduleEditForm(' +
+      jsStringForAttr(s.item) + ', ' + jsStringForAttr(s.intervalKm || '') + ', ' + jsStringForAttr(s.intervalMonths || '') + ', ' +
+      jsStringForAttr(s.partNumber || '') + ', ' + jsStringForAttr(s.torqueSpec || '') + ', ' + jsStringForAttr(s.notes || '') +
       ')" title="Edit interval / part number / torque / notes">' + EDIT_ICON + '</button>';
 
     return '<div class="schedule-row" style="--row-color: ' + rowColorVar + ';" role="button" tabindex="0" onclick="openFormDirect(\'' + itemNameEsc + '\')" onkeydown="if(event.key===\'Enter\')openFormDirect(\'' + itemNameEsc + '\')">' +
