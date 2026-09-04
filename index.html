@@ -557,7 +557,7 @@
         <div>
           <p class="vehicle-name">2012 Ram 1500 Sport</p>
           <p class="vehicle-trim">5.7L HEMI V8</p>
-          <p class="vehicle-vin muted">VIN not on file</p>
+          <p class="vehicle-vin muted" id="ramVin">VIN not on file</p>
         </div>
         <div class="stat-strip">
           <div class="stat">
@@ -601,7 +601,7 @@
         <div>
           <p class="vehicle-name">2014 Audi A4 S-line</p>
           <p class="vehicle-trim">2.0T · EA888</p>
-          <p class="vehicle-vin">VIN WAUFFCFL3EN007074</p>
+          <p class="vehicle-vin muted" id="audiVin">VIN not on file</p>
         </div>
         <div class="stat-strip">
           <div class="stat">
@@ -648,7 +648,7 @@
         <div>
           <p class="vehicle-name">2018 Mazda CX-3</p>
           <p class="vehicle-trim">2.0L Skyactiv-G</p>
-          <p class="vehicle-vin muted">VIN not on file</p>
+          <p class="vehicle-vin muted" id="mazdaVin">VIN not on file</p>
         </div>
         <div class="stat-strip">
           <div class="stat">
@@ -692,7 +692,7 @@
         <div>
           <p class="vehicle-name">2021 Chevy Tahoe High Country</p>
           <p class="vehicle-trim">6.2L V8 (L87)</p>
-          <p class="vehicle-vin muted">VIN not on file</p>
+          <p class="vehicle-vin muted" id="tahoeVin">VIN not on file</p>
         </div>
         <div class="stat-strip">
           <div class="stat">
@@ -865,6 +865,12 @@
     var settings = data.settings;
     var serviceLog = data.serviceLog;
     var currentOdometer = Number(settings.CurrentOdometer) || 0;
+
+    var vinEl = document.getElementById(prefix + 'Vin');
+    if (vinEl) {
+      vinEl.textContent = settings.VIN ? 'VIN ' + settings.VIN : 'VIN not on file';
+      vinEl.classList.toggle('muted', !settings.VIN);
+    }
 
     var odoEl = document.getElementById(prefix + 'Odometer');
     if (odoEl) odoEl.textContent = currentOdometer ? formatOdometer(currentOdometer) : 'not set';

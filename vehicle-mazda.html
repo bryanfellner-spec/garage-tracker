@@ -1095,7 +1095,7 @@
     <div>
       <h1 class="vehicle-title">2018 Mazda CX-3</h1>
       <p class="vehicle-sub">2.0L Skyactiv-G</p>
-      <p class="vehicle-vin">VIN not on file</p>
+      <p class="vehicle-vin muted" id="vinDisplay">VIN not on file</p>
     </div>
     <div class="odo-readout">
       <div class="odo-value" id="odoDisplay">&mdash;</div>
@@ -1136,6 +1136,23 @@
     <div class="qs-item">
       <div class="qs-value" id="qsLatestOdometer">&mdash;</div>
       <div class="qs-label">Latest odometer on file</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">Vehicle Info</h2>
+      <button class="section-add-btn" onclick="openVehicleInfoForm()">Edit vehicle info</button>
+    </div>
+    <div class="ownership-row">
+      <div>
+        <span class="item-name">VIN</span>
+        <span class="item-value muted" id="vinInfoDisplay">not set</span>
+      </div>
+      <div>
+        <span class="item-name">Paint code</span>
+        <span class="item-value muted" id="paintCodeDisplay">not set</span>
+      </div>
     </div>
   </div>
 
@@ -1684,6 +1701,28 @@
   </div>
 </div>
 
+<!-- VEHICLE INFO sheet -->
+<div class="sheet-backdrop" id="vehicleInfoSheet" onclick="if(event.target===this)closeSheet('vehicleInfoSheet')">
+  <div class="sheet">
+    <form onsubmit="submitVehicleInfoForm(event)">
+      <h3 class="sheet-title">Vehicle info</h3>
+      <p class="sheet-sub">VIN, paint code, and other reference details. Saves to the Sheet's Settings tab.</p>
+      <div class="form-field">
+        <label>VIN</label>
+        <input type="text" id="vinInput" placeholder="e.g. WAUFFCFL3EN007074">
+      </div>
+      <div class="form-field">
+        <label>Paint code</label>
+        <input type="text" id="paintCodeInput" placeholder="e.g. LZ7W">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('vehicleInfoSheet')">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- OWNERSHIP / PURCHASE INFO sheet -->
 <div class="sheet-backdrop" id="ownershipSheet" onclick="if(event.target===this)closeSheet('ownershipSheet')">
   <div class="sheet">
@@ -2217,6 +2256,7 @@
     renderSeasonalList(data.serviceLog);
     renderModList(data.modifications);
     renderActivityList(data.serviceLog);
+    renderVehicleInfo(data.settings);
     renderOwnership(data.settings);
     renderSgi(data.settings);
     renderTireSets(data);
@@ -2759,6 +2799,63 @@
     var n = Number(cost);
     if (n && n > 0) return '<span class="cost-tag">' + fmtMoney(n) + '</span>';
     return '<span class="cost-tag none">' + (emptyLabel || 'no cost logged') + '</span>';
+  }
+
+  /* ---------- Vehicle Info ---------- */
+  // Backed by the Settings tab (VIN, PaintCode) -- same "vehicle-specific
+  // tunable" pattern as Ownership/SGI below. To add another field later
+  // (e.g. Engine Code), follow the same recipe: an input here, a Settings
+  // key in submitVehicleInfoForm, and a display line in renderVehicleInfo.
+  var vehicleInfoData = { vin: null, paintCode: null };
+
+  function renderVehicleInfo(settings) {
+    vehicleInfoData.vin = settings.VIN || null;
+    vehicleInfoData.paintCode = settings.PaintCode || null;
+
+    var headerVin = document.getElementById('vinDisplay');
+    if (headerVin) {
+      headerVin.textContent = vehicleInfoData.vin ? 'VIN ' + vehicleInfoData.vin : 'VIN not on file';
+      headerVin.classList.toggle('muted', !vehicleInfoData.vin);
+    }
+
+    document.getElementById('vinInfoDisplay').textContent = vehicleInfoData.vin || 'not set';
+    document.getElementById('vinInfoDisplay').classList.toggle('muted', !vehicleInfoData.vin);
+    document.getElementById('paintCodeDisplay').textContent = vehicleInfoData.paintCode || 'not set';
+    document.getElementById('paintCodeDisplay').classList.toggle('muted', !vehicleInfoData.paintCode);
+  }
+
+  function openVehicleInfoForm() {
+    document.getElementById('vinInput').value = vehicleInfoData.vin || '';
+    document.getElementById('paintCodeInput').value = vehicleInfoData.paintCode || '';
+    document.getElementById('vehicleInfoSheet').classList.add('open');
+  }
+
+  function submitVehicleInfoForm(e) {
+    e.preventDefault();
+    var vin = document.getElementById('vinInput').value.trim();
+    var paintCode = document.getElementById('paintCodeInput').value.trim();
+    var saveBtn = e.target.querySelector('.btn-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    Promise.all([
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'VIN', value: vin }),
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'PaintCode', value: paintCode })
+    ]).then(function (results) {
+      if (results.every(function (r) { return r.ok; })) {
+        showToast('Vehicle info saved');
+        closeSheet('vehicleInfoSheet');
+        boot();
+      } else {
+        showToast('Could not save vehicle info');
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    });
   }
 
   /* ---------- Ownership & Costs ---------- */
