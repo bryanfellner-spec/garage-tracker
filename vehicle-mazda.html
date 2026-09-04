@@ -407,8 +407,10 @@
     inset: 0;
     background: rgba(0,0,0,0.55);
     display: none;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
     z-index: 10;
   }
 
@@ -417,10 +419,11 @@
   .sheet {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-bottom: none;
-    border-radius: 16px 16px 0 0;
+    border-radius: 16px;
     width: 100%;
     max-width: 480px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
     padding: 20px 20px 28px;
   }
 
@@ -1033,6 +1036,27 @@
     flex-wrap: wrap;
   }
   .sgi-card .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 3px; }
+  .autopay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 4px 9px;
+    border-radius: 100px;
+    background: var(--cat-fluid-dim);
+    color: var(--cat-fluid);
+    white-space: nowrap;
+  }
+  .autopay-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
 
   /* ---------- fuel & mileage (added) ---------- */
   .fuel-row {
@@ -1211,7 +1235,10 @@
         <div class="item-name" id="sgiHeadline" style="font-size:14px; font-weight:500; color:var(--text);">Not set up yet</div>
         <div class="item-sub" id="sgiSub">Choose Annual (paid in full) or Monthly pre-authorized debit, so renewals show up here.</div>
       </div>
-      <span class="status-pill none" id="sgiStatusPill">Not set</span>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span class="autopay-badge" id="sgiAutopayBadge" style="display:none;">Autopay</span>
+        <span class="status-pill none" id="sgiStatusPill">Not set</span>
+      </div>
     </div>
   </div>
 
@@ -3019,15 +3046,18 @@
     var headline = document.getElementById('sgiHeadline');
     var sub = document.getElementById('sgiSub');
     var pill = document.getElementById('sgiStatusPill');
+    var autopayBadge = document.getElementById('sgiAutopayBadge');
     if (!sgiData || !sgiData.date) {
       headline.textContent = 'Not set up yet';
       sub.textContent = 'Choose Annual (paid in full) or Monthly pre-authorized debit, so renewals show up here.';
       pill.className = 'status-pill none';
       pill.textContent = 'Not set';
+      autopayBadge.style.display = 'none';
       return;
     }
     var label = sgiData.type === 'monthly' ? 'Monthly PAD' : 'Annual (paid in full)';
     headline.innerHTML = label + ' &middot; ' + fmtMoney(sgiData.amount) + (sgiData.type === 'monthly' ? ' / mo' : ' / yr');
+    autopayBadge.style.display = sgiData.type === 'monthly' ? 'inline-flex' : 'none';
     var dueDate = new Date(sgiData.date + 'T00:00:00');
     var daysLeft = Math.round((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     var dueLabel = (sgiData.type === 'monthly' ? 'Next debit: ' : 'Renews: ') + formatDateShort(sgiData.date);
