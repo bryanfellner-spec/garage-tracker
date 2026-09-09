@@ -794,10 +794,20 @@
     return Number(km).toLocaleString('en-US') + ' km';
   }
 
+  // Parse a stored date string as LOCAL midnight, not UTC. A bare
+  // "yyyy-MM-dd" is otherwise read as UTC midnight, which in a negative-UTC
+  // timezone (e.g. Regina, UTC-6) shifts the displayed day back by one — and
+  // for a first-of-month date, back by a whole month in the schedule math.
+  function parseLocalDate_(iso) {
+    if (!iso) return null;
+    var d = new Date(String(iso) + (String(iso).length <= 10 ? 'T00:00:00' : ''));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   function formatDate(iso) {
     if (!iso) return '—';
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
+    var d = parseLocalDate_(iso);
+    if (!d) return iso;
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
@@ -806,12 +816,26 @@
   // Dashboard's "SCHEDULED MAINTENANCE — STATUS" section, but derived
   // live from ServiceLog + ServiceSchedule instead of a manual cell.
   function computeScheduleStatus(serviceLog, serviceSchedule, currentOdometer) {
+    // "Last done" per category = highest odometer reading (the most recent
+    // service point) — that's the km basis. A second map tracks the
+    // highest-odometer entry that ALSO has a valid date; the month-based
+    // due calc uses that, so a newest-but-dateless row can't silently blank
+    // out time-based status. Category / ServiceItem are trimmed so trailing-
+    // whitespace drift still matches (they're coupled only by string).
     var latestByCategory = {};
+    var latestDatedByCategory = {};
     serviceLog.forEach(function (entry) {
       if (!entry.Category) return;
-      var existing = latestByCategory[entry.Category];
+      var key = String(entry.Category).trim();
+      var existing = latestByCategory[key];
       if (!existing || Number(entry.Odometer) > Number(existing.Odometer)) {
-        latestByCategory[entry.Category] = entry;
+        latestByCategory[key] = entry;
+      }
+      if (parseLocalDate_(entry.Date)) {
+        var existingDated = latestDatedByCategory[key];
+        if (!existingDated || Number(entry.Odometer) > Number(existingDated.Odometer)) {
+          latestDatedByCategory[key] = entry;
+        }
       }
     });
 
@@ -820,7 +844,8 @@
     return serviceSchedule
       .filter(function (item) { return item.IntervalKm || item.IntervalMonths; })
       .map(function (item) {
-        var last = latestByCategory[item.ServiceItem];
+        var key = String(item.ServiceItem).trim();
+        var last = latestByCategory[key];
         if (!last) {
           return { item: item.ServiceItem, status: 'none', kmRemaining: null, dueAtKm: null };
         }
@@ -831,9 +856,10 @@
           : null;
 
         var monthsRemaining = null;
-        if (item.IntervalMonths && last.Date) {
-          var lastDate = new Date(last.Date);
-          if (!isNaN(lastDate.getTime())) {
+        var lastDated = latestDatedByCategory[key];
+        if (item.IntervalMonths && lastDated) {
+          var lastDate = parseLocalDate_(lastDated.Date);
+          if (lastDate) {
             var monthsSince = (now.getFullYear() - lastDate.getFullYear()) * 12 + (now.getMonth() - lastDate.getMonth());
             monthsRemaining = Number(item.IntervalMonths) - monthsSince;
           }
@@ -949,29 +975,60 @@
     { vehicleId: 'tahoe-2021', prefix: 'tahoe', label: 'Tahoe' }
   ];
 
-  function boot() {
-    var totalEntries = 0;
-    var loadedCount = 0;
+  // Per-vehicle cache key for the last-known bootstrap payload. Display-only
+  // and self-correcting: painted instantly on load, then overwritten by the
+  // fresh network result. If it's ever stale, the network pass fixes it.
+  function bootCacheKey(vehicleId) { return 'boot:' + vehicleId; }
 
-    var loads = FLEET_VEHICLES.map(function (v) {
-      return apiGet('bootstrap', { vehicleId: v.vehicleId }).then(function (res) {
-        if (res.ok) {
-          totalEntries += renderVehicleCard(v.prefix, res.data);
+  function paintFleetTotals(totalEntries, loadedCount) {
+    var entryEl = document.getElementById('fleetEntryCount');
+    if (entryEl) entryEl.textContent = totalEntries;
+    var vehEl = document.getElementById('fleetVehicleCount');
+    if (vehEl) vehEl.textContent = loadedCount;
+  }
+
+  // Render every card from whatever we cached last time, so the dashboard
+  // paints immediately instead of waiting on the network (stale-while-
+  // revalidate). Returns running totals so the header stats can show too.
+  function paintFromCache() {
+    var totalEntries = 0, loadedCount = 0;
+    FLEET_VEHICLES.forEach(function (v) {
+      try {
+        var cached = localStorage.getItem(bootCacheKey(v.vehicleId));
+        if (!cached) return;
+        totalEntries += renderVehicleCard(v.prefix, JSON.parse(cached));
+        loadedCount++;
+      } catch (e) { /* ignore a corrupt/absent cache entry */ }
+    });
+    if (loadedCount) paintFleetTotals(totalEntries, loadedCount);
+  }
+
+  function boot() {
+    // 1) Instant paint from cache (no-op on a first-ever visit).
+    paintFromCache();
+
+    // 2) One round trip for the whole fleet, then repaint with fresh data.
+    var ids = FLEET_VEHICLES.map(function (v) { return v.vehicleId; });
+    apiPost('bootstrapFleet', { vehicleIds: ids }).then(function (res) {
+      if (!res.ok) throw new Error(res.error || 'bootstrapFleet failed');
+      var data = res.data || {};
+      var totalEntries = 0, loadedCount = 0;
+      FLEET_VEHICLES.forEach(function (v) {
+        var vd = data[v.vehicleId];
+        if (vd && !vd.error) {
+          totalEntries += renderVehicleCard(v.prefix, vd);
           loadedCount++;
+          try { localStorage.setItem(bootCacheKey(v.vehicleId), JSON.stringify(vd)); } catch (e) {}
         } else {
-          console.error('bootstrap failed for ' + v.vehicleId + ':', res.error);
+          console.error('bootstrap failed for ' + v.vehicleId + ':', vd && vd.error);
           showToast('Could not load live ' + v.label + ' data — is it registered yet?');
         }
-      }).catch(function (err) {
-        console.error(err);
-        showToast('Could not reach the backend for ' + v.label);
       });
-    });
-
-    Promise.all(loads).then(function () {
-      document.getElementById('fleetEntryCount').textContent = totalEntries;
-      var fleetVehicleCountEl = document.getElementById('fleetVehicleCount');
-      if (fleetVehicleCountEl) fleetVehicleCountEl.textContent = loadedCount;
+      paintFleetTotals(totalEntries, loadedCount);
+    }).catch(function (err) {
+      // A network failure leaves any cache-painted cards in place.
+      console.error(err);
+      showToast('Could not reach the backend — showing last-saved data.');
     }).finally(function () {
       hideLoadingIndicator();
     });

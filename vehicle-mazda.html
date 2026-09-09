@@ -1937,13 +1937,35 @@
   // same function in index.html (blueprint §8), for items that have a km
   // and/or month interval. Items with no interval (Tire Swap, Alignment,
   // Timing Chain, etc.) are handled separately by the seasonal-list render.
+  // Parse a stored date string as LOCAL midnight, not UTC — same guard as
+  // formatDateLong. A bare "yyyy-MM-dd" read as UTC can shift a day (or a
+  // month, for first-of-month dates) in a negative-UTC timezone (Regina).
+  function parseLocalDate_(iso) {
+    if (!iso) return null;
+    var d = new Date(String(iso) + (String(iso).length <= 10 ? 'T00:00:00' : ''));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   function computeScheduleStatus(serviceLog, serviceSchedule, currentOdometer) {
+    // "Last done" per category = highest odometer (km basis). A second map
+    // tracks the highest-odometer entry that ALSO has a valid date, used for
+    // the month/due-date calc so a newest-but-dateless row can't blank out
+    // time-based status. Keys are trimmed so trailing-whitespace drift on a
+    // logged Category still matches its ServiceSchedule item.
     var latestByCategory = {};
+    var latestDatedByCategory = {};
     serviceLog.forEach(function (entry) {
       if (!entry.Category) return;
-      var existing = latestByCategory[entry.Category];
+      var key = String(entry.Category).trim();
+      var existing = latestByCategory[key];
       if (!existing || Number(entry.Odometer) > Number(existing.Odometer)) {
-        latestByCategory[entry.Category] = entry;
+        latestByCategory[key] = entry;
+      }
+      if (parseLocalDate_(entry.Date)) {
+        var existingDated = latestDatedByCategory[key];
+        if (!existingDated || Number(entry.Odometer) > Number(existingDated.Odometer)) {
+          latestDatedByCategory[key] = entry;
+        }
       }
     });
 
@@ -1952,7 +1974,8 @@
     return serviceSchedule
       .filter(function (item) { return item.IntervalKm || item.IntervalMonths; })
       .map(function (item) {
-        var last = latestByCategory[item.ServiceItem];
+        var key = String(item.ServiceItem).trim();
+        var last = latestByCategory[key];
         if (!last) {
           return { item: item.ServiceItem, status: 'none', kmRemaining: null, dueAtKm: null, last: null, intervalKm: item.IntervalKm, intervalMonths: item.IntervalMonths, partNumber: item.PartNumber, torqueSpec: item.TorqueSpec, notes: item.Notes, isCustom: !!item.isCustom };
         }
@@ -1964,9 +1987,10 @@
 
         var monthsRemaining = null;
         var dueDate = null;
-        if (item.IntervalMonths && last.Date) {
-          var lastDate = new Date(last.Date);
-          if (!isNaN(lastDate.getTime())) {
+        var lastDated = latestDatedByCategory[key];
+        if (item.IntervalMonths && lastDated) {
+          var lastDate = parseLocalDate_(lastDated.Date);
+          if (lastDate) {
             var monthsSince = (now.getFullYear() - lastDate.getFullYear()) * 12 + (now.getMonth() - lastDate.getMonth());
             monthsRemaining = Number(item.IntervalMonths) - monthsSince;
             dueDate = new Date(lastDate.getFullYear(), lastDate.getMonth() + Number(item.IntervalMonths), lastDate.getDate());
