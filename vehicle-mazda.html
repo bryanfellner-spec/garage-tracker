@@ -875,6 +875,92 @@
   .part-row .item-name { font-weight: 500; font-size: 14px; }
   .part-row .item-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
 
+  /* ---------- fluids & parts reference list ---------- */
+  .fluid-group { margin-bottom: 14px; }
+  .fluid-group:last-child { margin-bottom: 0; }
+  .fluid-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    margin: 0 0 6px 2px;
+  }
+  .fluid-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1.3fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .fluid-row:last-child { margin-bottom: 0; }
+  .fluid-row:hover { border-color: var(--accent); }
+  .fluid-row .item-name { font-weight: 500; font-size: 14px; }
+  .fluid-row .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .fluid-row .fluid-notes { font-size: 12px; color: var(--text-faint); line-height: 1.5; }
+  .fluid-row.readonly { cursor: default; }
+  .fluid-row.readonly:hover { border-color: var(--border); }
+  @media (max-width: 640px) {
+    .fluid-row { grid-template-columns: 1fr auto; }
+    .fluid-row .fluid-notes { grid-column: 1 / -1; }
+  }
+
+  /* ---------- shopping list (checkboxes -> on-screen list / print) ---------- */
+  .section-head-actions { display: flex; gap: 8px; align-items: center; }
+  #shopListBtn.active { border-color: var(--accent); color: var(--text); }
+  .fluid-row .shop-check {
+    width: 18px; height: 18px; flex-shrink: 0; align-self: center;
+    cursor: pointer; accent-color: var(--accent); margin: 0;
+  }
+  .shop-meta { color: var(--text-muted); }
+  .shop-add-row { display: flex; gap: 8px; margin-top: 4px; }
+  .shop-add-row input {
+    flex: 1; background: var(--surface-raised); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 11px; border-radius: 8px; font-size: 13px;
+  }
+  .shop-add-row input:focus { outline: none; border-color: var(--accent); }
+  .shop-group { margin-bottom: 14px; }
+  .shop-group-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-faint); margin: 0 0 6px;
+  }
+  .shop-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .shop-item:last-child { border-bottom: none; }
+  .shop-item-name { font-size: 14px; font-weight: 500; }
+  .shop-item-spec { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .tick-box { width: 15px; height: 15px; border: 1.5px solid var(--text-faint); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+  .shop-extra-remove {
+    margin-left: auto; background: none; border: none; color: var(--text-faint);
+    font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px;
+  }
+  .shop-extra-remove:hover { color: var(--status-overdue); }
+  .shop-empty { font-size: 13px; color: var(--text-faint); line-height: 1.6; padding: 8px 0 4px; }
+
+  @media print {
+    body { background: #fff !important; }
+    body > * { display: none !important; }
+    body > #shopSheet {
+      display: block !important; position: static !important; inset: auto !important;
+      background: #fff !important; padding: 0 !important; overflow: visible !important;
+    }
+    #shopSheet .sheet {
+      position: static !important; transform: none !important; box-shadow: none !important;
+      border: none !important; border-radius: 0 !important; max-width: 100% !important;
+      width: 100% !important; max-height: none !important; overflow: visible !important;
+      padding: 0 !important; background: #fff !important; color: #000 !important;
+    }
+    #shopSheet .sheet-title, #shopSheet .shop-item-name { color: #000 !important; }
+    #shopSheet .shop-meta, #shopSheet .shop-item-spec, #shopSheet .shop-group-title { color: #333 !important; }
+    #shopSheet .shop-item { border-bottom: 1px solid #ccc !important; }
+    #shopSheet .tick-box { border-color: #000 !important; }
+    .no-print { display: none !important; }
+  }
+
   .task-row {
     display: flex;
     justify-content: space-between;
@@ -1342,6 +1428,21 @@
 
   <div class="section">
     <div class="section-head">
+      <h2 class="section-title">Fluids &amp; Parts</h2>
+      <div class="section-head-actions">
+        <button class="section-add-btn" id="shopListBtn" onclick="openShopList()">Shopping list</button>
+        <button class="section-add-btn" onclick="openFluidPartForm()">+ Add item</button>
+      </div>
+    </div>
+    <div class="parts-empty" id="fluidPartsEmpty" style="display:none;">
+      <p>No reference items yet. Add the stuff you look up before a job &mdash; oil spec &amp; capacity, filter part numbers, bulb types, belt sizes, torque specs, and so on.</p>
+      <button class="section-add-btn" onclick="openFluidPartForm()">+ Add item</button>
+    </div>
+    <div id="fluidPartsList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
       <h2 class="section-title">Fuel &amp; Mileage</h2>
       <button class="section-add-btn" onclick="openFuelForm()">+ Log fill-up</button>
     </div>
@@ -1589,6 +1690,71 @@
         <button type="submit" class="btn-save" id="partSaveBtn">Save part</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- FLUIDS & PARTS reference entry sheet -->
+<div class="sheet-backdrop" id="fluidPartSheet" onclick="if(event.target===this)closeSheet('fluidPartSheet')">
+  <div class="sheet">
+    <form onsubmit="submitFluidPartForm(event)">
+      <h3 class="sheet-title" id="fluidPartFormTitle">Add a reference item</h3>
+      <p class="sheet-sub">Reference specs and part numbers for this vehicle &mdash; oil, filters, bulbs, fluids, belts, torque specs. Saves straight to the Sheet.</p>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Group</label>
+          <input type="text" id="fluidSection" list="fluidSectionOptions" placeholder="e.g. Fluids, Filters, Bulbs">
+          <datalist id="fluidSectionOptions"></datalist>
+        </div>
+        <div class="form-field">
+          <label>Item</label>
+          <input type="text" id="fluidItem" placeholder="e.g. Engine oil, Low-beam bulb">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Spec / part #</label>
+        <input type="text" id="fluidCol1" placeholder="e.g. 5W-30 LL-04, H7, WIX 57002">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Type / grade</label>
+          <input type="text" id="fluidCol2" placeholder="e.g. full synthetic, 55W">
+        </div>
+        <div class="form-field">
+          <label>Capacity / qty</label>
+          <input type="text" id="fluidCol3" placeholder="e.g. 4.6 L w/ filter, x2">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Notes</label>
+        <textarea id="fluidNotes" placeholder="optional"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeSheet('fluidPartSheet')">Cancel</button>
+        <button type="submit" class="btn-save" id="fluidPartSaveBtn">Save item</button>
+      </div>
+      <button type="button" class="row-delete-btn" id="fluidPartDeleteBtn" style="display:none; width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="deleteFluidPartFromForm()">Remove this item</button>
+    </form>
+  </div>
+</div>
+
+<!-- SHOPPING LIST overlay -->
+<div class="sheet-backdrop" id="shopSheet" onclick="if(event.target===this)closeSheet('shopSheet')">
+  <div class="sheet">
+    <div id="shopPrintArea">
+      <h3 class="sheet-title">Shopping list</h3>
+      <p class="sheet-sub shop-meta" id="shopMeta"></p>
+      <div id="shopListBody"></div>
+    </div>
+    <div class="shop-add-row no-print">
+      <input type="text" id="shopExtraInput" placeholder="Add a one-off item (washer fluid, rags, etc.)" onkeydown="if(event.key==='Enter'){event.preventDefault();addShopExtra();}">
+      <button type="button" class="section-add-btn" onclick="addShopExtra()">+ Add</button>
+    </div>
+    <div class="form-actions no-print" style="margin-top:16px;">
+      <button type="button" class="btn-cancel" onclick="closeSheet('shopSheet')">Close</button>
+      <button type="button" class="btn-save" onclick="printShopList()">Print / Save as PDF</button>
+    </div>
+    <button type="button" class="row-delete-btn no-print" id="shopClearBtn" style="width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="clearShopList()">Clear list</button>
   </div>
 </div>
 
@@ -2300,6 +2466,7 @@
     data.customTasks = data.customTasks || [];
     data.fuelLog = data.fuelLog || [];
     data.partsStorage = data.partsStorage || [];
+    data.fluidsAndParts = data.fluidsAndParts || [];
 
     renderOdometer(data.settings);
     renderQuickStats(data);
@@ -2312,6 +2479,7 @@
     renderSgi(data.settings);
     renderTireSets(data);
     renderPartsStorage(data.partsStorage);
+    renderFluidParts(data.fluidsAndParts);
     renderFuelLog(data.fuelLog);
     renderCustomTasksList(data.customTasks);
     recalcCostTotals();
@@ -2797,11 +2965,12 @@
     mod: 'voidModification',
     fuel: 'voidFuelEntry',
     part: 'voidPartEntry',
+    fluid: 'voidFluidPart',
     task: 'voidCustomTask'
   };
 
   function deleteRow(btn) {
-    var row = btn.closest('.activity-row, .mod-row, .part-row, .task-row, .fuel-row, .todo-row');
+    var row = btn.closest('.activity-row, .mod-row, .part-row, .fluid-row, .task-row, .fuel-row, .todo-row');
     if (!row) return;
     var entryId = row.getAttribute('data-entry-id');
     var source = row.getAttribute('data-source'); // present only on real, backend-loaded rows
@@ -3421,6 +3590,306 @@
       saveBtn.textContent = 'Save part';
     });
   }
+
+  // ---------- Fluids & Parts reference list (editable) ----------
+  function escFluid_(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fluidRowHtml(item) {
+    var specline = [item.Col1, item.Col2, item.Col3]
+      .map(function (v) { return (v == null ? '' : String(v)).trim(); })
+      .filter(Boolean).map(escFluid_).join(' &middot; ');
+    var hasId = item.EntryID !== '' && item.EntryID !== null && item.EntryID !== undefined;
+    var chk = hasId
+      ? '<input type="checkbox" class="shop-check" data-fluid-id="' + escFluid_(item.EntryID) + '"' + (shopState.checked[String(item.EntryID)] ? ' checked' : '') + ' onclick="event.stopPropagation()" onchange="toggleShopItem(this)" aria-label="Add to shopping list" title="Add to shopping list">'
+      : '';
+    var openAttrs = hasId
+      ? ' data-entry-id="' + escFluid_(item.EntryID) + '" data-source="fluid" role="button" tabindex="0" onclick="openFluidPartForm(this)"'
+      : '';
+    var delBtn = hasId
+      ? '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>'
+      : '<span></span>';
+    return '<div class="fluid-row' + (hasId ? '' : ' readonly') + '"' + openAttrs + '>' +
+      '<div class="row-lead">' + chk + '<div><div class="item-name">' + (escFluid_(item.Item) || '&mdash;') + '</div>' +
+        (specline ? '<div class="item-sub">' + specline + '</div>' : '') +
+      '</div></div>' +
+      '<div class="fluid-notes">' + escFluid_(item.Notes) + '</div>' +
+      delBtn +
+    '</div>';
+  }
+
+  function renderFluidParts(fluidsAndParts) {
+    var list = document.getElementById('fluidPartsList');
+    var empty = document.getElementById('fluidPartsEmpty');
+    if (!list) return;
+    var rows = fluidsAndParts || [];
+    pruneShopChecked(rows);
+    updateShopButton();
+    if (rows.length === 0) {
+      list.innerHTML = '';
+      list.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    list.style.display = 'block';
+    // Group by Section (its own free-form column), preserving first-seen order.
+    var order = [];
+    var groups = {};
+    rows.forEach(function (r) {
+      var sec = (r.Section == null || String(r.Section).trim() === '') ? 'Other' : String(r.Section).trim();
+      if (!groups[sec]) { groups[sec] = []; order.push(sec); }
+      groups[sec].push(r);
+    });
+    list.innerHTML = order.map(function (sec) {
+      return '<div class="fluid-group"><div class="fluid-group-title">' + escFluid_(sec) + '</div>' +
+        groups[sec].map(fluidRowHtml).join('') + '</div>';
+    }).join('');
+  }
+
+  var currentEditingFluidId = null;
+
+  // rowEl omitted -> add a new item; a real Sheet-backed row (data-entry-id)
+  // -> look the record up in STATE and edit it in place via updateFluidPart.
+  function openFluidPartForm(rowEl) {
+    currentEditingFluidId = null;
+    var item = null;
+    if (rowEl && rowEl.getAttribute && rowEl.getAttribute('data-entry-id')) {
+      var id = rowEl.getAttribute('data-entry-id');
+      item = (STATE.fluidsAndParts || []).filter(function (f) { return String(f.EntryID) === String(id); })[0] || null;
+      if (item) currentEditingFluidId = id;
+    }
+
+    // Datalist of existing groups + a few common defaults, so groups stay tidy.
+    var seen = {};
+    var sections = [];
+    (STATE.fluidsAndParts || []).forEach(function (f) {
+      var s = (f.Section == null ? '' : String(f.Section).trim());
+      if (s && !seen[s]) { seen[s] = true; sections.push(s); }
+    });
+    ['Fluids', 'Filters', 'Bulbs', 'Belts', 'Battery', 'Brakes', 'Tires', 'Wipers', 'Other'].forEach(function (s) {
+      if (!seen[s]) { seen[s] = true; sections.push(s); }
+    });
+    document.getElementById('fluidSectionOptions').innerHTML =
+      sections.map(function (s) { return '<option value="' + escFluid_(s) + '"></option>'; }).join('');
+
+    document.getElementById('fluidPartFormTitle').textContent = item ? ('Edit: ' + (item.Item || 'item')) : 'Add a reference item';
+    document.getElementById('fluidSection').value = item ? (item.Section || '') : '';
+    document.getElementById('fluidItem').value = item ? (item.Item || '') : '';
+    document.getElementById('fluidCol1').value = item ? (item.Col1 || '') : '';
+    document.getElementById('fluidCol2').value = item ? (item.Col2 || '') : '';
+    document.getElementById('fluidCol3').value = item ? (item.Col3 || '') : '';
+    document.getElementById('fluidNotes').value = item ? (item.Notes || '') : '';
+    document.getElementById('fluidPartDeleteBtn').style.display = item ? 'flex' : 'none';
+    document.getElementById('fluidPartSheet').classList.add('open');
+  }
+
+  function submitFluidPartForm(e) {
+    e.preventDefault();
+    var section = document.getElementById('fluidSection').value.trim() || 'Other';
+    var itemName = document.getElementById('fluidItem').value.trim();
+    var col1 = document.getElementById('fluidCol1').value.trim();
+    var col2 = document.getElementById('fluidCol2').value.trim();
+    var col3 = document.getElementById('fluidCol3').value.trim();
+    var notes = document.getElementById('fluidNotes').value.trim();
+
+    if (!itemName) { showToast('Give the item a name first'); return; }
+
+    var saveBtn = document.getElementById('fluidPartSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving\u2026';
+
+    var isEdit = !!currentEditingFluidId;
+    var entryPayload = { section: section, item: itemName, col1: col1, col2: col2, col3: col3, notes: notes };
+    var apiCall = isEdit
+      ? apiPost('updateFluidPart', { vehicleId: VEHICLE_ID, entryId: currentEditingFluidId, entry: entryPayload })
+      : apiPost('addFluidPart', { vehicleId: VEHICLE_ID, entry: entryPayload });
+
+    apiCall.then(function (res) {
+      if (res.ok) {
+        showToast(isEdit ? 'Item updated' : 'Item saved to the Sheet');
+        closeSheet('fluidPartSheet');
+        document.querySelector('#fluidPartSheet form').reset();
+        currentEditingFluidId = null;
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend \u2014 item was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save item';
+    });
+  }
+
+  function deleteFluidPartFromForm() {
+    if (!currentEditingFluidId) { closeSheet('fluidPartSheet'); return; }
+    if (!confirm('Remove this item? This voids it in the Google Sheet \u2014 there\'s no undo from here.')) return;
+    apiPost('voidFluidPart', { vehicleId: VEHICLE_ID, entryId: currentEditingFluidId }).then(function (res) {
+      if (res.ok) {
+        showToast('Item removed');
+        closeSheet('fluidPartSheet');
+        currentEditingFluidId = null;
+        boot();
+      } else {
+        showToast('Could not remove item: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend to remove this item');
+    });
+  }
+
+  // ---------- Shopping list (checkboxes -> on-screen list / print / PDF) ----------
+  // Selection is per-vehicle, per-device UI state (not maintenance data), so it
+  // lives in localStorage — nothing here touches the Sheet or the backend.
+  function shopKey_() { return 'garage:shoplist:v1:' + VEHICLE_ID; }
+
+  var shopState = (function () {
+    var def = { checked: {}, extras: [] };
+    try {
+      var raw = localStorage.getItem(shopKey_());
+      if (!raw) return def;
+      var parsed = JSON.parse(raw);
+      return {
+        checked: (parsed && parsed.checked && typeof parsed.checked === 'object') ? parsed.checked : {},
+        extras: (parsed && Array.isArray(parsed.extras)) ? parsed.extras : []
+      };
+    } catch (e) { return def; }
+  })();
+
+  function saveShop_() {
+    try { localStorage.setItem(shopKey_(), JSON.stringify(shopState)); }
+    catch (e) { /* storage full/blocked — selection stays in memory for this session */ }
+  }
+
+  // Drop selected ids that are no longer in the current list (e.g. deleted items).
+  function pruneShopChecked(rows) {
+    var present = {};
+    (rows || []).forEach(function (r) { present[String(r.EntryID)] = true; });
+    var changed = false;
+    Object.keys(shopState.checked).forEach(function (id) {
+      if (!present[id]) { delete shopState.checked[id]; changed = true; }
+    });
+    if (changed) saveShop_();
+  }
+
+  function shopCount_() { return Object.keys(shopState.checked).length + shopState.extras.length; }
+
+  function updateShopButton() {
+    var btn = document.getElementById('shopListBtn');
+    if (!btn) return;
+    var n = shopCount_();
+    btn.textContent = n ? ('Shopping list \u00b7 ' + n) : 'Shopping list';
+    btn.classList.toggle('active', n > 0);
+  }
+
+  function toggleShopItem(el) {
+    var id = String(el.getAttribute('data-fluid-id'));
+    if (el.checked) shopState.checked[id] = true;
+    else delete shopState.checked[id];
+    saveShop_();
+    updateShopButton();
+  }
+
+  function addShopExtra() {
+    var input = document.getElementById('shopExtraInput');
+    var text = (input.value || '').trim();
+    if (!text) return;
+    shopState.extras.push({ id: 'x' + Date.now(), text: text });
+    input.value = '';
+    saveShop_();
+    updateShopButton();
+    renderShopList();
+    input.focus();
+  }
+
+  function removeShopExtra(el) {
+    var id = String(el.getAttribute('data-extra-id'));
+    shopState.extras = shopState.extras.filter(function (x) { return String(x.id) !== id; });
+    saveShop_();
+    updateShopButton();
+    renderShopList();
+  }
+
+  function clearShopList() {
+    if (!shopCount_()) { closeSheet('shopSheet'); return; }
+    if (!confirm('Clear the whole shopping list (checked items and one-off items)?')) return;
+    shopState = { checked: {}, extras: [] };
+    saveShop_();
+    updateShopButton();
+    renderFluidParts(STATE.fluidsAndParts);
+    renderShopList();
+  }
+
+  function shopSpecLine_(item) {
+    return [item.Col1, item.Col2, item.Col3]
+      .map(function (v) { return (v == null ? '' : String(v)).trim(); })
+      .filter(Boolean).map(escFluid_).join(' &middot; ');
+  }
+
+  function renderShopList() {
+    var body = document.getElementById('shopListBody');
+    if (!body) return;
+
+    var meta = document.getElementById('shopMeta');
+    if (meta) {
+      var titleEl = document.querySelector('.vehicle-title');
+      var title = titleEl ? titleEl.textContent : '';
+      var odo = (STATE.settings && STATE.settings.CurrentOdometer) ? (formatOdometer(STATE.settings.CurrentOdometer) + ' km') : '';
+      var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      meta.textContent = [title, today, odo].filter(Boolean).join('  \u00b7  ');
+    }
+
+    var selected = (STATE.fluidsAndParts || []).filter(function (f) { return shopState.checked[String(f.EntryID)]; });
+
+    if (selected.length === 0 && shopState.extras.length === 0) {
+      body.innerHTML = '<div class="shop-empty">Nothing selected yet. Tick items in the Fluids &amp; Parts list, or add a one-off item below.</div>';
+      return;
+    }
+
+    var html = '';
+    var order = [];
+    var groups = {};
+    selected.forEach(function (f) {
+      var sec = (f.Section == null || String(f.Section).trim() === '') ? 'Other' : String(f.Section).trim();
+      if (!groups[sec]) { groups[sec] = []; order.push(sec); }
+      groups[sec].push(f);
+    });
+    html += order.map(function (sec) {
+      return '<div class="shop-group"><div class="shop-group-title">' + escFluid_(sec) + '</div>' +
+        groups[sec].map(function (f) {
+          var spec = shopSpecLine_(f);
+          return '<div class="shop-item"><span class="tick-box"></span><div>' +
+            '<div class="shop-item-name">' + (escFluid_(f.Item) || '&mdash;') + '</div>' +
+            (spec ? '<div class="shop-item-spec">' + spec + '</div>' : '') +
+          '</div></div>';
+        }).join('') + '</div>';
+    }).join('');
+
+    if (shopState.extras.length) {
+      html += '<div class="shop-group"><div class="shop-group-title">One-off items</div>' +
+        shopState.extras.map(function (x) {
+          return '<div class="shop-item"><span class="tick-box"></span>' +
+            '<div class="shop-item-name">' + escFluid_(x.text) + '</div>' +
+            '<button class="shop-extra-remove no-print" data-extra-id="' + escFluid_(x.id) + '" onclick="removeShopExtra(this)" title="Remove" aria-label="Remove">&times;</button>' +
+          '</div>';
+        }).join('') + '</div>';
+    }
+
+    body.innerHTML = html;
+  }
+
+  function openShopList() {
+    renderShopList();
+    document.getElementById('shopSheet').classList.add('open');
+  }
+
+  function printShopList() { window.print(); }
 
   function customTaskRowHtml(task) {
     var interval = [task.IntervalKm ? Number(task.IntervalKm).toLocaleString('en-US') + ' km' : null, task.IntervalMonths ? task.IntervalMonths + ' mo' : null].filter(Boolean).join(' / ') || 'no interval set';
