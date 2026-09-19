@@ -1065,6 +1065,40 @@
   .cat-chip.sm { width: 24px; height: 24px; border-radius: 7px; }
   .cat-chip.sm svg { width: 13px; height: 13px; }
 
+  /* ---------- modification category manager ---------- */
+  .cat-manage-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+  .cat-manage-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 6px 6px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .cat-manage-name { cursor: pointer; }
+  .cat-manage-name:hover { color: var(--accent); }
+  .cat-manage-chip button {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+  }
+  .cat-manage-chip button:hover { background: rgba(220,80,80,0.15); color: #e5726b; }
+  .cat-manage-add-row { display: flex; gap: 8px; }
+  .cat-manage-add-row input { flex: 1; }
+
   /* ---------- due-progress bar (blended in from reference design) ---------- */
   .due-bar-track {
     height: 5px;
@@ -1417,7 +1451,10 @@
   <div class="section">
     <div class="section-head">
       <h2 class="section-title">Modifications</h2>
-      <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
+      <div class="section-head-actions">
+        <button class="section-add-btn" onclick="openModCategoryManager()">Edit categories</button>
+        <button class="section-add-btn" onclick="openModForm()">+ Add modification</button>
+      </div>
     </div>
     <div class="mod-list" id="modList">
     </div>
@@ -1587,18 +1624,7 @@
       </div>
       <div class="form-field">
         <label>Category</label>
-        <select id="modCategory">
-          <option>Intake</option>
-          <option>Exhaust</option>
-          <option>ECU/Tune</option>
-          <option>Suspension</option>
-          <option>Wheels/Tires</option>
-          <option>Brakes</option>
-          <option>Cosmetic</option>
-          <option>Lighting</option>
-          <option>Audio</option>
-          <option>Other</option>
-        </select>
+        <select id="modCategory"></select>
       </div>
       <div class="form-field">
         <label>Status</label>
@@ -1641,6 +1667,23 @@
       </div>
       <button type="button" class="row-delete-btn" id="modDeleteBtn" style="display:none; width:100%; justify-content:center; margin-top:10px; border:1px solid var(--border); border-radius:8px; padding:10px;" onclick="deleteFromForm()">Remove this modification</button>
     </form>
+  </div>
+</div>
+
+<!-- MODIFICATION CATEGORIES manager -->
+<div class="sheet-backdrop" id="modCategorySheet" onclick="if(event.target===this)closeSheet('modCategorySheet')">
+  <div class="sheet">
+    <h3 class="sheet-title">Modification categories</h3>
+    <p class="sheet-sub">Add, rename, or remove the categories offered when logging a modification. Click a category to rename it. This list is saved to this browser only &mdash; removing or renaming a category never changes the category already saved on an existing modification.</p>
+    <div class="cat-manage-list" id="modCategoryList"></div>
+    <div class="cat-manage-add-row">
+      <input type="text" id="modCategoryNewInput" placeholder="e.g. Engine" onkeydown="if(event.key==='Enter'){event.preventDefault();addModCategory();}">
+      <button type="button" class="section-add-btn" onclick="addModCategory()">+ Add</button>
+    </div>
+    <div class="form-actions" style="margin-top:16px;">
+      <button type="button" class="btn-cancel" onclick="resetModCategoriesToDefault()">Reset to defaults</button>
+      <button type="button" class="btn-save" onclick="closeSheet('modCategorySheet')">Done</button>
+    </div>
   </div>
 </div>
 
@@ -2225,6 +2268,105 @@
   function catChipHtml(name, sizeClass) {
     var cat = catForName(name);
     return '<span class="cat-chip ' + (sizeClass || '') + '" style="--chip-color:var(--cat-' + cat + ');--chip-bg:var(--cat-' + cat + '-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + CAT_ICONS[cat] + '</svg></span>';
+  }
+
+  // ---------- Modification categories ----------
+  // The Category picker in the "Log a modification" form used to be a
+  // fixed <select> list. It's now driven by this list so it can be
+  // edited from the "Edit categories" button instead of requiring a code
+  // change. Like the shopping list, this is local UI state (not
+  // maintenance data) so it lives in localStorage per vehicle — the
+  // Category column already stores whatever plain text is chosen, so
+  // nothing about the Sheet or the backend contract changes.
+  var MOD_CATEGORY_DEFAULTS = ['Intake', 'Exhaust', 'ECU/Tune', 'Suspension', 'Wheels/Tires', 'Brakes', 'Cosmetic', 'Lighting', 'Audio', 'Other'];
+  function modCategoryKey_() { return 'garage:modcategories:v1:' + VEHICLE_ID; }
+  function loadModCategories() {
+    try {
+      var raw = localStorage.getItem(modCategoryKey_());
+      if (!raw) return MOD_CATEGORY_DEFAULTS.slice();
+      var parsed = JSON.parse(raw);
+      return (Array.isArray(parsed) && parsed.length) ? parsed : MOD_CATEGORY_DEFAULTS.slice();
+    } catch (e) { return MOD_CATEGORY_DEFAULTS.slice(); }
+  }
+  var modCategories = loadModCategories();
+  function saveModCategories_() {
+    try { localStorage.setItem(modCategoryKey_(), JSON.stringify(modCategories)); }
+    catch (e) { /* storage full/blocked — list stays in memory for this session */ }
+  }
+
+  // Populates the Category <select> in the mod form. extraValue keeps an
+  // existing entry's category selectable (and pre-selected) even if it's
+  // since been removed from the managed list, so opening an old entry to
+  // edit it never silently changes its category out from under it.
+  function renderModCategorySelect(extraValue) {
+    var select = document.getElementById('modCategory');
+    if (!select) return;
+    var opts = modCategories.slice();
+    if (extraValue && opts.indexOf(extraValue) === -1) opts.push(extraValue);
+    select.innerHTML = opts.map(function (c) { return '<option>' + c + '</option>'; }).join('');
+  }
+
+  function renderModCategoryManagerList_() {
+    var list = document.getElementById('modCategoryList');
+    if (!modCategories.length) {
+      list.innerHTML = '<p class="sheet-sub" style="margin:0;">No categories yet — add one below.</p>';
+      return;
+    }
+    list.innerHTML = modCategories.map(function (cat, idx) {
+      return '<span class="cat-manage-chip"><span class="cat-manage-name" onclick="renameModCategory(' + idx + ')" title="Click to rename">' + cat + '</span>' +
+        '<button type="button" onclick="removeModCategory(' + idx + ')" title="Remove from list">&times;</button></span>';
+    }).join('');
+  }
+
+  function openModCategoryManager() {
+    renderModCategoryManagerList_();
+    document.getElementById('modCategorySheet').classList.add('open');
+  }
+
+  function addModCategory() {
+    var input = document.getElementById('modCategoryNewInput');
+    var val = (input.value || '').trim();
+    if (!val) return;
+    var exists = modCategories.some(function (c) { return c.toLowerCase() === val.toLowerCase(); });
+    if (exists) { showToast('That category already exists'); return; }
+    modCategories.push(val);
+    saveModCategories_();
+    renderModCategoryManagerList_();
+    renderModCategorySelect();
+    input.value = '';
+    input.focus();
+  }
+
+  function removeModCategory(idx) {
+    if (modCategories.length <= 1) { showToast('Keep at least one category'); return; }
+    var removed = modCategories[idx];
+    if (!confirm('Remove "' + removed + '" from the category list? Modifications already logged under it keep that category — this only removes it from the picker.')) return;
+    modCategories.splice(idx, 1);
+    saveModCategories_();
+    renderModCategoryManagerList_();
+    renderModCategorySelect();
+  }
+
+  function renameModCategory(idx) {
+    var current = modCategories[idx];
+    var val = prompt('Rename category', current);
+    if (val === null) return;
+    val = val.trim();
+    if (!val) return;
+    var dupe = modCategories.some(function (c, i) { return i !== idx && c.toLowerCase() === val.toLowerCase(); });
+    if (dupe) { showToast('That category already exists'); return; }
+    modCategories[idx] = val;
+    saveModCategories_();
+    renderModCategoryManagerList_();
+    renderModCategorySelect();
+  }
+
+  function resetModCategoriesToDefault() {
+    if (!confirm('Reset to the default category list? Any custom categories you added will be removed from the picker (existing modifications keep their category).')) return;
+    modCategories = MOD_CATEGORY_DEFAULTS.slice();
+    saveModCategories_();
+    renderModCategoryManagerList_();
+    renderModCategorySelect();
   }
 
   // ---------- LIVE RENDER FUNCTIONS ----------
@@ -2877,7 +3019,8 @@
 
     document.getElementById('modFormTitle').textContent = mod ? 'Edit: ' + (mod.Modification || 'modification') : 'Log a modification';
     document.getElementById('modName').value = mod ? (mod.Modification || '') : '';
-    document.getElementById('modCategory').value = mod && mod.Category ? mod.Category : 'Intake';
+    renderModCategorySelect(mod ? mod.Category : null);
+    document.getElementById('modCategory').value = mod && mod.Category ? mod.Category : (modCategories[0] || 'Other');
     document.getElementById('modDate').value = mod ? (mod.Date || '') : '';
     document.getElementById('modOdo').value = mod ? (mod.Odometer || '') : '';
     document.getElementById('modDetails').value = mod ? (mod.Details === '\u2014' ? '' : (mod.Details || '')) : '';
