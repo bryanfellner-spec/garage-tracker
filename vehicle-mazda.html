@@ -902,7 +902,16 @@
   .fluid-row:hover { border-color: var(--accent); }
   .fluid-row .item-name { font-weight: 500; font-size: 14px; }
   .fluid-row .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .fluid-row .fluid-notes { font-size: 12px; color: var(--text-faint); line-height: 1.5; }
+  .fluid-row .fluid-notes {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.45;
+    padding: 7px 10px;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+  }
+  .fluid-row .fluid-notes:empty { padding: 0; border: 0; background: none; }
   .fluid-row.readonly { cursor: default; }
   .fluid-row.readonly:hover { border-color: var(--border); }
   @media (max-width: 640px) {
