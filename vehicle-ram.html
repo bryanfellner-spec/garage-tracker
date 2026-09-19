@@ -1624,7 +1624,8 @@
       </div>
       <div class="form-field">
         <label>Category</label>
-        <select id="modCategory"></select>
+        <input type="text" id="modCategory" list="modCategoryOptions" placeholder="e.g. Engine" autocomplete="off">
+        <datalist id="modCategoryOptions"></datalist>
       </div>
       <div class="form-field">
         <label>Status</label>
@@ -2294,16 +2295,30 @@
     catch (e) { /* storage full/blocked — list stays in memory for this session */ }
   }
 
-  // Populates the Category <select> in the mod form. extraValue keeps an
-  // existing entry's category selectable (and pre-selected) even if it's
-  // since been removed from the managed list, so opening an old entry to
-  // edit it never silently changes its category out from under it.
-  function renderModCategorySelect(extraValue) {
-    var select = document.getElementById('modCategory');
-    if (!select) return;
+  // Populates the Category datalist that backs the free-type Category
+  // input in the mod form. extraValue makes sure an existing entry's
+  // category still shows up as a suggestion even if it's since been
+  // removed from the managed list — it doesn't force anything, since the
+  // field is free text and keeps whatever was actually typed/stored.
+  function renderModCategoryOptions(extraValue) {
+    var datalist = document.getElementById('modCategoryOptions');
+    if (!datalist) return;
     var opts = modCategories.slice();
     if (extraValue && opts.indexOf(extraValue) === -1) opts.push(extraValue);
-    select.innerHTML = opts.map(function (c) { return '<option>' + c + '</option>'; }).join('');
+    datalist.innerHTML = opts.map(function (c) { return '<option value="' + c + '">'; }).join('');
+  }
+
+  // Adds a category to the managed list if it isn't already there — called
+  // whenever a modification is saved with a category that was free-typed
+  // rather than picked from the list, so it shows up as a suggestion (and
+  // in "Edit categories") next time without the person having to add it
+  // twice.
+  function rememberModCategory(val) {
+    if (!val) return;
+    var exists = modCategories.some(function (c) { return c.toLowerCase() === val.toLowerCase(); });
+    if (exists) return;
+    modCategories.push(val);
+    saveModCategories_();
   }
 
   function renderModCategoryManagerList_() {
@@ -2332,7 +2347,7 @@
     modCategories.push(val);
     saveModCategories_();
     renderModCategoryManagerList_();
-    renderModCategorySelect();
+    renderModCategoryOptions();
     input.value = '';
     input.focus();
   }
@@ -2344,7 +2359,7 @@
     modCategories.splice(idx, 1);
     saveModCategories_();
     renderModCategoryManagerList_();
-    renderModCategorySelect();
+    renderModCategoryOptions();
   }
 
   function renameModCategory(idx) {
@@ -2358,7 +2373,7 @@
     modCategories[idx] = val;
     saveModCategories_();
     renderModCategoryManagerList_();
-    renderModCategorySelect();
+    renderModCategoryOptions();
   }
 
   function resetModCategoriesToDefault() {
@@ -2366,7 +2381,7 @@
     modCategories = MOD_CATEGORY_DEFAULTS.slice();
     saveModCategories_();
     renderModCategoryManagerList_();
-    renderModCategorySelect();
+    renderModCategoryOptions();
   }
 
   // ---------- LIVE RENDER FUNCTIONS ----------
@@ -3019,7 +3034,7 @@
 
     document.getElementById('modFormTitle').textContent = mod ? 'Edit: ' + (mod.Modification || 'modification') : 'Log a modification';
     document.getElementById('modName').value = mod ? (mod.Modification || '') : '';
-    renderModCategorySelect(mod ? mod.Category : null);
+    renderModCategoryOptions(mod ? mod.Category : null);
     document.getElementById('modCategory').value = mod && mod.Category ? mod.Category : (modCategories[0] || 'Other');
     document.getElementById('modDate').value = mod ? (mod.Date || '') : '';
     document.getElementById('modOdo').value = mod ? (mod.Odometer || '') : '';
@@ -3570,7 +3585,8 @@
   function submitModForm(e) {
     e.preventDefault();
     var name = document.getElementById('modName').value || 'Untitled modification';
-    var category = document.getElementById('modCategory').value;
+    var category = (document.getElementById('modCategory').value || '').trim() || 'Other';
+    rememberModCategory(category);
     var installed = document.getElementById('modStatusInstalled').checked;
     var date = document.getElementById('modDate').value;
     var odo = document.getElementById('modOdo').value;
