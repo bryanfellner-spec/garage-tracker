@@ -2090,7 +2090,12 @@
         url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
       });
     }
-    return fetch(url).then(function (res) { return res.json(); });
+    // Cache-bust every bootstrap GET. A write busts the *server* cache, but a
+    // *browser* HTTP cache could still replay the previous response and hide a
+    // just-saved change. A unique param + no-store defeats that; the backend
+    // ignores unknown params, so _ts is harmless server-side.
+    url += '&_ts=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(function (res) { return res.json(); });
   }
 
   // POST as text/plain to avoid a CORS preflight Apps Script doesn't handle.
@@ -2571,19 +2576,30 @@
   }
 
   function modRowHtml(mod) {
+    var isPlanned = String(mod.Status) === 'planned';
     var sub = [mod.Category, mod.Date ? formatDateLong(mod.Date) : null, mod.Odometer ? formatOdometer(mod.Odometer) + ' km' : null].filter(Boolean).join(' &middot; ');
-    return '<div class="mod-row" role="button" tabindex="0" data-cost="' + (Number(mod.Cost) || 0) + '" data-status="installed" data-entry-id="' + mod.EntryID + '" data-source="mod" onclick="openModForm(this)" onkeydown="if(event.key===\'Enter\')openModForm(this)">' +
-      '<div class="row-lead">' + catChipHtml(mod.Modification || mod.Category) + '<div><div class="item-name">' + (mod.Modification || 'Untitled modification') + '</div><div class="item-sub">' + (sub || 'No details') + '</div></div></div>' +
+    var badge = isPlanned
+      ? '<span class="mod-badge planned">Planned</span>'
+      : '<span class="mod-badge installed">Installed</span>';
+    return '<div class="mod-row" role="button" tabindex="0" data-cost="' + (Number(mod.Cost) || 0) + '" data-status="' + (isPlanned ? 'planned' : 'installed') + '" data-entry-id="' + mod.EntryID + '" data-source="mod" onclick="openModForm(this)" onkeydown="if(event.key===\'Enter\')openModForm(this)">' +
+      '<div class="row-lead">' + catChipHtml(mod.Modification || mod.Category) + '<div><div class="item-name">' + (mod.Modification || 'Untitled modification') + '</div><div class="item-sub">' + (sub || (isPlanned ? 'planned' : 'No details')) + '</div></div></div>' +
       '<div><span class="col-label">Details</span><span class="col-value">' + (mod.Details || '&mdash;') + '</span></div>' +
       '<div style="display:flex; align-items:center; gap:6px;">' +
-        costTagHtml(mod.Cost) +
-        '<span class="mod-badge installed">Installed</span>' +
+        costTagHtml(mod.Cost, isPlanned ? 'no estimate' : undefined) +
+        badge +
         '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
       '</div></div>';
   }
 
   function renderModList(modifications) {
-    document.getElementById('modList').innerHTML = modifications.map(modRowHtml).join('');
+    // Installed first, planned (wishlist) last — keeps the list reading the
+    // way it did when planned mods were appended client-side.
+    var ordered = (modifications || []).slice().sort(function (a, b) {
+      var ap = String(a.Status) === 'planned' ? 1 : 0;
+      var bp = String(b.Status) === 'planned' ? 1 : 0;
+      return ap - bp;
+    });
+    document.getElementById('modList').innerHTML = ordered.map(modRowHtml).join('');
     recalcModCount();
   }
 
@@ -3009,12 +3025,12 @@
   var currentEditingModRow = null;
 
   // rowEl is either:
-  //  - omitted/null: opening the form fresh to log a brand new mod
-  //  - a real Sheet-backed mod row (data-source="mod"): look the full
-  //    record up in STATE and edit it in place via updateModification
-  //  - a session-only "planned" mod row (no data-source): read its
-  //    current values back out of the DOM, same as before this edit
-  //    feature existed
+  //  - omitted/null: opening the form fresh to log a brand-new mod
+  //  - an existing mod row (data-source="mod"): look the full record up in
+  //    STATE and edit it in place. Installed vs planned is a real, editable
+  //    state now (Status on the Sheet), so the toggle stays enabled and an
+  //    edit can promote a planned mod to installed (or back) via
+  //    updateModification.
   function openModForm(rowEl) {
     currentEditingModRow = rowEl || null;
     var isBackendEdit = !!(rowEl && rowEl.getAttribute('data-source') === 'mod');
@@ -3023,13 +3039,6 @@
     if (isBackendEdit) {
       var entryId = rowEl.getAttribute('data-entry-id');
       mod = (STATE.modifications || []).filter(function (m) { return String(m.EntryID) === String(entryId); })[0] || null;
-    } else if (rowEl) {
-      mod = {
-        Modification: rowEl.querySelector('.item-name').textContent,
-        Category: (rowEl.querySelector('.item-sub').textContent || '').split(' \u00b7 ')[0],
-        Details: rowEl.querySelector('.col-value').textContent,
-        Cost: rowEl.getAttribute('data-cost') || ''
-      };
     }
 
     document.getElementById('modFormTitle').textContent = mod ? 'Edit: ' + (mod.Modification || 'modification') : 'Log a modification';
@@ -3043,16 +3052,18 @@
     document.getElementById('modInstalledBy').value = mod ? (mod.InstalledBy || '') : '';
     document.getElementById('modNotes').value = mod ? (mod.Notes || '') : '';
 
-    // A real Sheet-backed mod is always "Installed" — editing it can't
-    // turn it into a session-only "planned" row, so lock the toggle.
-    document.getElementById('modStatusInstalled').checked = isBackendEdit;
-    document.getElementById('modStatusPlanned').checked = !isBackendEdit;
-    document.getElementById('modStatusPlanned').disabled = isBackendEdit;
-    document.getElementById('modStatusInstalled').disabled = isBackendEdit;
+    // Installed vs planned is now a persisted, editable state. New mods still
+    // default to "Planned" (unchanged); an existing mod reflects its saved
+    // Status, and the toggle stays enabled either way.
+    var isPlanned = !!(mod && String(mod.Status) === 'planned');
+    document.getElementById('modStatusInstalled').checked = mod ? !isPlanned : false;
+    document.getElementById('modStatusPlanned').checked = mod ? isPlanned : true;
+    document.getElementById('modStatusPlanned').disabled = false;
+    document.getElementById('modStatusInstalled').disabled = false;
 
     document.getElementById('modSheetSub').textContent = isBackendEdit
-      ? 'Editing a modification already saved to the Sheet.'
-      : 'Installed mods save straight to the Sheet. Planned mods stay local to this browser for now — the Sheet has no "planned" field yet.';
+      ? 'Editing a saved modification. Switch between Installed and Planned any time.'
+      : 'Installed and planned mods both save to the Sheet. Planned = a wishlist item you haven\'t done yet.';
     document.getElementById('modDeleteBtn').style.display = rowEl ? 'flex' : 'none';
     document.getElementById('modSheet').classList.add('open');
   }
@@ -3158,9 +3169,11 @@
       return;
     }
 
-    // Local-only rows (fuel, parts, custom tasks, session-only "planned"
-    // mods) have no backend record — just toggle a visual voided/undo state,
-    // same as the original preview behavior.
+    // Rows with no data-source/data-entry-id have no backend record — just
+    // toggle a visual voided/undo state. After the planned-mod persistence
+    // change, service/mod/fuel/part/task rows are all backend-backed and are
+    // voided by the branch above; this fallback only covers a transient
+    // UI-only row that isn't tied to a Sheet entry.
     var voided = row.classList.toggle('voided');
     if (voided) {
       btn.innerHTML = 'Undo';
@@ -3595,72 +3608,40 @@
     var installedBy = document.getElementById('modInstalledBy').value;
     var notes = document.getElementById('modNotes').value;
 
-    if (installed) {
-      var saveBtn = document.getElementById('modSaveBtn');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving…';
+    var saveBtn = document.getElementById('modSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
 
-      var isBackendEdit = !!(currentEditingModRow && currentEditingModRow.getAttribute('data-source') === 'mod');
-      var entryPayload = { date: date, odometer: odo, modification: name, category: category, details: details, cost: cost, installedBy: installedBy, notes: notes };
-      var apiCall = isBackendEdit
-        ? apiPost('updateModification', { vehicleId: VEHICLE_ID, entryId: currentEditingModRow.getAttribute('data-entry-id'), entry: entryPayload })
-        : apiPost('addModification', { vehicleId: VEHICLE_ID, entry: entryPayload });
+    // Planned mods now persist to the Sheet just like installed ones — stored
+    // as a Modifications row with Status='planned' (installed = 'active'), so a
+    // wishlist survives a reload and syncs across devices. No migration: the
+    // Status column already exists on every vehicle Sheet.
+    var status = installed ? 'active' : 'planned';
+    var isBackendEdit = !!(currentEditingModRow && currentEditingModRow.getAttribute('data-source') === 'mod');
+    var entryPayload = { date: date, odometer: odo, modification: name, category: category, details: details, cost: cost, installedBy: installedBy, notes: notes, status: status };
+    var apiCall = isBackendEdit
+      ? apiPost('updateModification', { vehicleId: VEHICLE_ID, entryId: currentEditingModRow.getAttribute('data-entry-id'), entry: entryPayload })
+      : apiPost('addModification', { vehicleId: VEHICLE_ID, entry: entryPayload });
 
-      apiCall.then(function (res) {
-        if (res.ok) {
-          showToast(isBackendEdit ? 'Modification updated' : 'Modification saved to the Sheet');
-          closeSheet('modSheet');
-          document.querySelector('#modSheet form').reset();
-          currentEditingModRow = null;
-          boot();
-        } else {
-          showToast('Could not save: ' + (res.error || 'unknown error'));
-        }
-      }).catch(function (err) {
-        console.error(err);
-        showToast('Could not reach the backend — modification was not saved');
-      }).finally(function () {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save modification';
-      });
-      return;
-    }
-
-    // Planned mods have no field in the Modifications sheet yet, so these
-    // stay local to this browser session only (same as the original
-    // preview). They get no data-entry-id/data-source, so deleteRow()
-    // treats them as local rows rather than trying to void a Sheet row.
-    if (currentEditingModRow) {
-      currentEditingModRow.querySelector('.item-name').textContent = name;
-      currentEditingModRow.querySelector('.item-sub').textContent = category + ' · planned';
-      currentEditingModRow.querySelector('.col-value').textContent = details;
-      currentEditingModRow.setAttribute('data-cost', Number(cost) || 0);
-      var costTag = currentEditingModRow.querySelector('.cost-tag');
-      if (costTag) { costTag.outerHTML = costTagHtml(cost, 'no estimate'); }
-    } else {
-      var row = document.createElement('div');
-      row.className = 'mod-row';
-      row.setAttribute('role', 'button');
-      row.setAttribute('tabindex', '0');
-      row.setAttribute('data-cost', Number(cost) || 0);
-      row.setAttribute('data-status', 'planned');
-      row.innerHTML =
-        '<div class="row-lead">' + catChipHtml(name) + '<div><div class="item-name">' + name + '</div><div class="item-sub">' + category + ' &middot; planned</div></div></div>' +
-        '<div><span class="col-label">Details</span><span class="col-value">' + details + '</span></div>' +
-        '<div style="display:flex; align-items:center; gap:6px;">' +
-          costTagHtml(cost, 'no estimate') +
-          '<span class="mod-badge planned">Planned</span>' +
-          '<button class="row-delete-btn" onclick="event.stopPropagation(); deleteRow(this)" title="Remove">' + TRASH_ICON + '</button>' +
-        '</div>';
-      row.onclick = function () { openModForm(row); };
-      document.getElementById('modList').appendChild(row);
-    }
-
-    recalcCostTotals();
-    recalcModCount();
-    closeSheet('modSheet');
-    document.querySelector('#modSheet form').reset();
-    currentEditingModRow = null;
+    apiCall.then(function (res) {
+      if (res.ok) {
+        showToast(isBackendEdit
+          ? (installed ? 'Modification updated' : 'Planned mod updated')
+          : (installed ? 'Modification saved to the Sheet' : 'Planned mod saved to the Sheet'));
+        closeSheet('modSheet');
+        document.querySelector('#modSheet form').reset();
+        currentEditingModRow = null;
+        boot();
+      } else {
+        showToast('Could not save: ' + (res.error || 'unknown error'));
+      }
+    }).catch(function (err) {
+      console.error(err);
+      showToast('Could not reach the backend — modification was not saved');
+    }).finally(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save modification';
+    });
   }
 
   function deleteFromForm() {

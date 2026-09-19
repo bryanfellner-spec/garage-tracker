@@ -744,7 +744,12 @@
         url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
       });
     }
-    return fetch(url).then(function (res) { return res.json(); });
+    // Cache-bust every bootstrap GET. A write busts the *server* cache, but a
+    // *browser* HTTP cache could still replay the previous response and hide a
+    // just-saved change. A unique param + no-store defeats that; the backend
+    // ignores unknown params, so _ts is harmless server-side.
+    url += '&_ts=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(function (res) { return res.json(); });
   }
 
   // POST as text/plain to avoid a CORS preflight Apps Script doesn't handle
