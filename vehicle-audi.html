@@ -227,6 +227,270 @@
     .quick-stats { grid-template-columns: repeat(2, 1fr); }
   }
 
+  /* ---------- dashboard block ---------- */
+  .dash-block {
+    margin-bottom: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Top row: health banner + oil tile side-by-side */
+  .dash-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  /* Health banner — spans left column */
+  .dash-health {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .dash-health-label {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .dash-health-status {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .dash-health-status.ok    { color: var(--status-ok); }
+  .dash-health-status.soon  { color: var(--status-soon); }
+  .dash-health-status.overdue { color: var(--status-overdue); }
+  .dash-health-status.none  { color: var(--text-muted); }
+
+  .dash-urgent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dash-urgent-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .dash-urgent-name {
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dash-urgent-detail {
+    font-size: 12px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  /* Oil tile — right column, fixed width */
+  .dash-oil {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .dash-oil-label {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  .dash-oil-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dash-oil-sub {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  /* Stats row */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* Quick actions row */
+  .dash-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .dash-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+  }
+
+  .dash-action-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    flex-shrink: 0;
+  }
+
+  .dash-action-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  @media (max-width: 640px) {
+    .dash-top { grid-template-columns: 1fr; }
+    .dash-oil { min-width: 0; }
+    .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    .dash-actions { gap: 6px; }
+    .dash-action-btn { font-size: 12px; padding: 8px 11px; }
+  }
+
+  /* ---------- odometer confirm modal ---------- */
+  .odo-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 30;
+  }
+  .odo-confirm-backdrop.open { display: flex; }
+
+  .odo-confirm-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 24px 20px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .odo-confirm-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--status-soon-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .odo-confirm-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--status-soon);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .odo-confirm-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin: 0 0 6px;
+  }
+
+  .odo-confirm-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 20px;
+  }
+
+  .odo-confirm-body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .odo-confirm-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  .odo-confirm-yes {
+    flex: 1;
+    background: var(--status-soon-dim);
+    border: 1px solid var(--status-soon);
+    color: var(--status-soon);
+    border-radius: 8px;
+    padding: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .odo-confirm-yes:hover { filter: brightness(1.1); }
+
+  .odo-confirm-no {
+    flex: 1;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 11px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .odo-confirm-no:hover { border-color: var(--text-muted); color: var(--text); }
+
   /* ---------- section headings ---------- */
   .section {
     margin-bottom: 36px;
@@ -1273,23 +1537,65 @@
     <input type="file" id="heroPhotoInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(event, VEHICLE_ID, 'heroPhotoImg', 'heroCarIcon')">
   </div>
 
-  <div class="quick-stats">
-    <div class="qs-item">
-      <div class="qs-value" id="qsServiceRecords">&mdash;</div>
-      <div class="qs-label">Service records logged</div>
+  <!-- DASHBOARD -->
+  <div class="dash-block">
+
+    <!-- Row 1: health banner + oil tile -->
+    <div class="dash-top">
+      <div class="dash-health">
+        <div>
+          <div class="dash-health-label">Vehicle health</div>
+          <div class="dash-health-status" id="dashHealthStatus">&mdash;</div>
+        </div>
+        <div class="dash-urgent" id="dashUrgentList"></div>
+      </div>
+      <div class="dash-oil">
+        <div class="dash-oil-label">Oil change</div>
+        <div class="dash-oil-value" id="dashOilValue">&mdash;</div>
+        <div class="dash-oil-sub" id="dashOilSub"></div>
+      </div>
     </div>
-    <div class="qs-item">
-      <div class="qs-value" id="qsOilChanges">&mdash;</div>
-      <div class="qs-label">Oil changes on record</div>
+
+    <!-- Row 2: stat strip -->
+    <div class="dash-stats quick-stats">
+      <div class="qs-item">
+        <div class="qs-value" id="qsServiceRecords">&mdash;</div>
+        <div class="qs-label">Service records</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="qsOilChanges">&mdash;</div>
+        <div class="qs-label">Oil changes</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="qsModifications">&mdash;</div>
+        <div class="qs-label">Modifications</div>
+      </div>
+      <div class="qs-item">
+        <div class="qs-value" id="qsLatestOdometer">&mdash;</div>
+        <div class="qs-label">Odometer on file</div>
+      </div>
     </div>
-    <div class="qs-item">
-      <div class="qs-value" id="qsModifications">&mdash;</div>
-      <div class="qs-label">Modifications</div>
+
+    <!-- Row 3: quick actions -->
+    <div class="dash-actions">
+      <button class="dash-action-btn" onclick="openFormDirect('Oil Change')">
+        <svg viewBox="0 0 24 24"><path d="M12 3c-3.2 4-5 7-5 9.5a5 5 0 0 0 10 0C17 10 15.2 7 12 3z"/><line x1="9.3" y1="13" x2="14.7" y2="13"/></svg>
+        Log oil change
+      </button>
+      <button class="dash-action-btn" onclick="openFuelForm()">
+        <svg viewBox="0 0 24 24"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3.5"/><path d="M15 9.5V13a2 2 0 0 0 4 0v-1l1-1"/><rect x="3" y="11" width="12" height="7" rx="1"/></svg>
+        Log fuel
+      </button>
+      <button class="dash-action-btn" onclick="openCategoryPicker()">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Log service
+      </button>
+      <button class="dash-action-btn" onclick="document.getElementById('odoInput').focus(); document.getElementById('odoInput').scrollIntoView({behavior:'smooth', block:'center'})">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><polyline points="12 6 12 12 16 14"/><path d="M22 2L16 8"/></svg>
+        Update odometer
+      </button>
     </div>
-    <div class="qs-item">
-      <div class="qs-value" id="qsLatestOdometer">&mdash;</div>
-      <div class="qs-label">Latest odometer on file</div>
-    </div>
+
   </div>
 
   <div class="section">
@@ -1527,6 +1833,21 @@
     </div>
   </div>
 
+</div>
+
+<!-- ODOMETER CONFIRM MODAL -->
+<div class="odo-confirm-backdrop" id="odoConfirmBackdrop">
+  <div class="odo-confirm-modal">
+    <div class="odo-confirm-icon">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3 class="odo-confirm-title">Large mileage jump</h3>
+    <p class="odo-confirm-body" id="odoConfirmBody">The odometer value you entered is more than 10,000 km above the current reading. Please confirm this is correct before saving.</p>
+    <div class="odo-confirm-btns">
+      <button class="odo-confirm-yes" id="odoConfirmYes">Yes, it's correct</button>
+      <button class="odo-confirm-no" onclick="closeOdoConfirm()">No, let me fix it</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2652,6 +2973,7 @@
 
     renderOdometer(data.settings);
     renderQuickStats(data);
+    renderDashboard(data);
     renderScheduleList(data);
     renderSeasonalList(data.serviceLog);
     renderModList(data.modifications);
@@ -3104,9 +3426,9 @@
     var val = parseInt(input.value, 10);
     if (!val || val <= 0) return;
 
-    // If the new value is lower than the current odometer, ask the user to
-    // confirm — this is a correction, not a normal forward update.
     var currentOdo = Number((STATE.settings && STATE.settings.CurrentOdometer) || 0);
+
+    // Low-odometer guard: entering a value below current means a correction.
     if (currentOdo > 0 && val < currentOdo) {
       var confirmed = window.confirm(
         'The value you entered (' + val.toLocaleString('en-US') + ' km) is lower than the current odometer (' +
@@ -3115,35 +3437,38 @@
       if (!confirmed) return;
     }
 
-    var btn = input.nextElementSibling;
-    var originalLabel = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Saving…';
+    // Large-jump guard: >10,000 km above current triggers the styled modal.
+    confirmOdometerJump_(val, currentOdo, function () {
+      var btn = input.nextElementSibling;
+      var originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
 
-    var todayStr = new Date().toISOString().slice(0, 10);
+      var todayStr = new Date().toISOString().slice(0, 10);
 
-    apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'CurrentOdometer', value: val })
-      .then(function (res) {
-        if (!res.ok) throw new Error(res.error || 'unknown error');
-        return apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'OdometerAsOf', value: todayStr });
-      })
-      .then(function (res) {
-        if (res.ok) {
-          showToast(val < currentOdo ? 'Odometer corrected to ' + val.toLocaleString('en-US') + ' km' : 'Odometer saved to the Sheet');
-          input.value = '';
-          boot();
-        } else {
-          showToast('Could not save odometer: ' + (res.error || 'unknown error'));
-        }
-      })
-      .catch(function (err) {
-        console.error(err);
-        showToast('Could not reach the backend — odometer was not saved');
-      })
-      .finally(function () {
-        btn.disabled = false;
-        btn.textContent = originalLabel;
-      });
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'CurrentOdometer', value: val })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.error || 'unknown error');
+          return apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'OdometerAsOf', value: todayStr });
+        })
+        .then(function (res) {
+          if (res.ok) {
+            showToast(val < currentOdo ? 'Odometer corrected to ' + val.toLocaleString('en-US') + ' km' : 'Odometer saved to the Sheet');
+            input.value = '';
+            boot();
+          } else {
+            showToast('Could not save odometer: ' + (res.error || 'unknown error'));
+          }
+        })
+        .catch(function (err) {
+          console.error(err);
+          showToast('Could not reach the backend — odometer was not saved');
+        })
+        .finally(function () {
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        });
+    });
   }
 
   var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7"/></svg>';
@@ -3566,43 +3891,50 @@
     var owner = document.getElementById('entryOwner').value;
     var notes = document.getElementById('entryNotes').value;
 
-    var saveBtn = document.getElementById('entrySaveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving…';
-
     var isEdit = !!currentEditingEntryId;
-    var entryPayload = {
-      date: date, odometer: odo, category: category, description: desc,
-      qtyParts: qtyParts, cost: cost, performedBy: performedBy, owner: owner, notes: notes
-    };
-    var apiCall = isEdit
-      ? apiPost('updateServiceLogEntry', { vehicleId: VEHICLE_ID, entryId: currentEditingEntryId, entry: entryPayload })
-      : apiPost('addServiceLogEntry', { vehicleId: VEHICLE_ID, entry: entryPayload });
+    var currentOdo = Number((STATE.settings && STATE.settings.CurrentOdometer) || 0);
+    var enteredOdo = odo ? parseInt(odo, 10) : 0;
 
-    apiCall.then(function (res) {
-      if (res.ok) {
-        showToast(isEdit ? 'Entry updated' : 'Entry saved to the Sheet');
-        closeSheet('addSheet');
-        document.getElementById('formView').reset();
-        currentEditingEntryId = null;
-        var todoIdToClear = pendingTodoVoidId;
-        pendingTodoVoidId = null;
-        if (!isEdit && todoIdToClear) {
-          apiPost('voidCustomTask', { vehicleId: VEHICLE_ID, entryId: todoIdToClear }).catch(function (err) {
-            console.error('Entry saved, but could not clear the completed to-do:', err);
-          }).finally(boot);
+    // Large-jump guard on service entry odometer — fires before the save
+    // button is disabled so the user can go back and fix the value.
+    confirmOdometerJump_(enteredOdo, currentOdo, function () {
+      var saveBtn = document.getElementById('entrySaveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      var entryPayload = {
+        date: date, odometer: odo, category: category, description: desc,
+        qtyParts: qtyParts, cost: cost, performedBy: performedBy, owner: owner, notes: notes
+      };
+      var apiCall = isEdit
+        ? apiPost('updateServiceLogEntry', { vehicleId: VEHICLE_ID, entryId: currentEditingEntryId, entry: entryPayload })
+        : apiPost('addServiceLogEntry', { vehicleId: VEHICLE_ID, entry: entryPayload });
+
+      apiCall.then(function (res) {
+        if (res.ok) {
+          showToast(isEdit ? 'Entry updated' : 'Entry saved to the Sheet');
+          closeSheet('addSheet');
+          document.getElementById('formView').reset();
+          currentEditingEntryId = null;
+          var todoIdToClear = pendingTodoVoidId;
+          pendingTodoVoidId = null;
+          if (!isEdit && todoIdToClear) {
+            apiPost('voidCustomTask', { vehicleId: VEHICLE_ID, entryId: todoIdToClear }).catch(function (err) {
+              console.error('Entry saved, but could not clear the completed to-do:', err);
+            }).finally(boot);
+          } else {
+            boot();
+          }
         } else {
-          boot();
+          showToast('Could not save: ' + (res.error || 'unknown error'));
         }
-      } else {
-        showToast('Could not save: ' + (res.error || 'unknown error'));
-      }
-    }).catch(function (err) {
-      console.error(err);
-      showToast('Could not reach the backend — entry was not saved');
-    }).finally(function () {
-      saveBtn.disabled = false;
-      saveBtn.textContent = isEdit ? 'Save changes' : 'Save entry';
+      }).catch(function (err) {
+        console.error(err);
+        showToast('Could not reach the backend — entry was not saved');
+      }).finally(function () {
+        saveBtn.disabled = false;
+        saveBtn.textContent = isEdit ? 'Save changes' : 'Save entry';
+      });
     });
   }
 
@@ -4123,6 +4455,114 @@
   recalcFuelStats();
   renderSgiCard();
   boot();
+
+  // ---------- DASHBOARD ----------
+  // Renders the at-a-glance health block at the top of the page.
+  // Pulls from STATE (already computed by computeScheduleStatus / renderAll)
+  // — no extra backend call needed.
+  function renderDashboard(data) {
+    var currentOdometer = Number(data.settings.CurrentOdometer) || 0;
+    var schedule = data.serviceSchedule.concat(
+      (data.customTasks || []).map(function (t) {
+        return { ServiceItem: t.TaskName, IntervalKm: t.IntervalKm, IntervalMonths: t.IntervalMonths, FirstService: '', Group: t.Group || 'Custom', Notes: t.Notes, isCustom: true };
+      })
+    );
+    var statuses = computeScheduleStatus(data.serviceLog, schedule, currentOdometer);
+
+    var overdue = statuses.filter(function (s) { return s.status === 'overdue'; });
+    var soon    = statuses.filter(function (s) { return s.status === 'soon'; });
+
+    // --- Health banner ---
+    var healthEl = document.getElementById('dashHealthStatus');
+    var statusWord, statusClass;
+    if (overdue.length > 0) {
+      statusWord  = overdue.length === 1 ? '1 item overdue' : overdue.length + ' items overdue';
+      statusClass = 'overdue';
+    } else if (soon.length > 0) {
+      statusWord  = soon.length === 1 ? '1 item due soon' : soon.length + ' items due soon';
+      statusClass = 'soon';
+    } else if (statuses.length === 0) {
+      statusWord  = 'No schedule set';
+      statusClass = 'none';
+    } else {
+      statusWord  = 'All caught up';
+      statusClass = 'ok';
+    }
+    healthEl.textContent = statusWord;
+    healthEl.className   = 'dash-health-status ' + statusClass;
+
+    // Urgent list — show up to 3 worst items (overdue first, then soon)
+    var urgent = overdue.concat(soon).slice(0, 3);
+    var urgentEl = document.getElementById('dashUrgentList');
+    if (urgent.length === 0) {
+      urgentEl.innerHTML = statusClass === 'none'
+        ? '<span style="font-size:12px;color:var(--text-faint);">Add intervals to the schedule to see due-date tracking here.</span>'
+        : '<span style="font-size:12px;color:var(--status-ok);">No outstanding service items.</span>';
+    } else {
+      urgentEl.innerHTML = urgent.map(function (s) {
+        var pill = s.status === 'overdue'
+          ? '<span class="status-pill overdue" style="font-size:11px;padding:3px 8px;">' + (s.kmRemaining !== null ? Math.abs(Math.round(s.kmRemaining)).toLocaleString('en-US') + ' km over' : 'Overdue') + '</span>'
+          : '<span class="status-pill soon" style="font-size:11px;padding:3px 8px;">' + (s.kmRemaining !== null ? Math.round(s.kmRemaining).toLocaleString('en-US') + ' km left' : 'Due soon') + '</span>';
+        return '<div class="dash-urgent-item">' +
+          catChipHtml(s.item, 'sm') +
+          '<span class="dash-urgent-name">' + s.item + '</span>' +
+          pill +
+          '</div>';
+      }).join('');
+    }
+
+    // --- Oil tile ---
+    var oilStatus = statuses.filter(function (s) { return s.item === 'Oil Change'; })[0];
+    var oilValueEl = document.getElementById('dashOilValue');
+    var oilSubEl   = document.getElementById('dashOilSub');
+
+    if (!oilStatus || oilStatus.status === 'none') {
+      oilValueEl.textContent = 'No record';
+      oilSubEl.textContent   = 'Log an oil change to start tracking';
+      oilValueEl.style.color = '';
+    } else if (oilStatus.status === 'overdue') {
+      var over = oilStatus.kmRemaining !== null ? Math.abs(Math.round(oilStatus.kmRemaining)).toLocaleString('en-US') + ' km' : '—';
+      oilValueEl.textContent = over + ' over';
+      oilValueEl.style.color = 'var(--status-overdue)';
+      oilSubEl.textContent   = oilStatus.dueAtKm ? 'Was due at ' + formatOdometer(oilStatus.dueAtKm) + ' km' : 'Overdue';
+    } else {
+      var left = oilStatus.kmRemaining !== null ? Math.round(oilStatus.kmRemaining).toLocaleString('en-US') + ' km' : 'OK';
+      oilValueEl.textContent = left;
+      oilValueEl.style.color = oilStatus.status === 'soon' ? 'var(--status-soon)' : 'var(--status-ok)';
+      oilSubEl.textContent   = oilStatus.dueAtKm ? 'Due at ' + formatOdometer(oilStatus.dueAtKm) + ' km' : '';
+    }
+  }
+
+  // ---------- ODOMETER JUMP GUARD ----------
+  // Shared helper — shows the styled confirmation modal when the entered
+  // odometer is more than 10,000 km above the current stored value.
+  // onConfirm is called only if the user clicks "Yes, it's correct".
+  var _odoConfirmCallback = null;
+
+  function confirmOdometerJump_(newOdo, currentOdo, onConfirm) {
+    var diff = newOdo - currentOdo;
+    if (currentOdo > 0 && diff > 10000) {
+      var bodyEl = document.getElementById('odoConfirmBody');
+      bodyEl.innerHTML =
+        'You entered <strong>' + Number(newOdo).toLocaleString('en-US') + ' km</strong>, ' +
+        'which is <strong>' + Math.round(diff).toLocaleString('en-US') + ' km</strong> above the current reading ' +
+        '(<strong>' + Number(currentOdo).toLocaleString('en-US') + ' km</strong>).<br><br>' +
+        'Is that correct?';
+      _odoConfirmCallback = onConfirm;
+      document.getElementById('odoConfirmYes').onclick = function () {
+        closeOdoConfirm();
+        if (_odoConfirmCallback) _odoConfirmCallback();
+      };
+      document.getElementById('odoConfirmBackdrop').classList.add('open');
+    } else {
+      onConfirm();
+    }
+  }
+
+  function closeOdoConfirm() {
+    document.getElementById('odoConfirmBackdrop').classList.remove('open');
+    _odoConfirmCallback = null;
+  }
 </script>
 
 </body>
