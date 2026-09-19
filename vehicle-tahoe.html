@@ -3104,6 +3104,17 @@
     var val = parseInt(input.value, 10);
     if (!val || val <= 0) return;
 
+    // If the new value is lower than the current odometer, ask the user to
+    // confirm — this is a correction, not a normal forward update.
+    var currentOdo = Number((STATE.settings && STATE.settings.CurrentOdometer) || 0);
+    if (currentOdo > 0 && val < currentOdo) {
+      var confirmed = window.confirm(
+        'The value you entered (' + val.toLocaleString('en-US') + ' km) is lower than the current odometer (' +
+        currentOdo.toLocaleString('en-US') + ' km).\n\nThis will overwrite the stored reading — use this only to correct a mileage entry mistake.\n\nContinue?'
+      );
+      if (!confirmed) return;
+    }
+
     var btn = input.nextElementSibling;
     var originalLabel = btn.textContent;
     btn.disabled = true;
@@ -3118,7 +3129,7 @@
       })
       .then(function (res) {
         if (res.ok) {
-          showToast('Odometer saved to the Sheet');
+          showToast(val < currentOdo ? 'Odometer corrected to ' + val.toLocaleString('en-US') + ' km' : 'Odometer saved to the Sheet');
           input.value = '';
           boot();
         } else {
