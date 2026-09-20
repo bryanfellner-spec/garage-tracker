@@ -2346,6 +2346,10 @@
           <label>Next debit date</label>
           <input type="date" id="sgiNextDebit">
         </div>
+        <div class="form-field" style="grid-column: 1 / -1;">
+          <label>Annual renewal date</label>
+          <input type="date" id="sgiRenewalDateMonthly">
+        </div>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" onclick="closeSheet('sgiSheet')">Cancel</button>
@@ -3689,11 +3693,17 @@
   }
 
   /* ---------- Registration & Plates (SGI) ---------- */
-  // Also backed by Settings (RegType, RegAmount, RegDate) — see note above.
-  var sgiData = null; // { type: 'annual'|'monthly', amount, date }
+  // Also backed by Settings (RegType, RegAmount, RegDate, RegRenewalDate) — see note above.
+  // RegRenewalDate is only meaningful for RegType === 'monthly': it's the
+  // annual plate-renewal date, tracked separately from RegDate (which for
+  // monthly PAD means "next debit"). Annual vehicles keep using RegDate
+  // as their single renewal date, unchanged. An older/other vehicle Sheet
+  // with no RegRenewalDate row reads back blank, per the backward-
+  // compatibility rule — it just won't show a renewal line yet.
+  var sgiData = null; // { type: 'annual'|'monthly', amount, date, renewalDate }
 
   function renderSgi(settings) {
-    sgiData = settings.RegType ? { type: settings.RegType, amount: Number(settings.RegAmount) || 0, date: settings.RegDate || '' } : null;
+    sgiData = settings.RegType ? { type: settings.RegType, amount: Number(settings.RegAmount) || 0, date: settings.RegDate || '', renewalDate: settings.RegRenewalDate || '' } : null;
     renderSgiCard();
   }
 
@@ -3703,6 +3713,7 @@
         document.getElementById('sgiTypeMonthly').checked = true;
         document.getElementById('sgiMonthlyAmount').value = sgiData.amount;
         document.getElementById('sgiNextDebit').value = sgiData.date;
+        document.getElementById('sgiRenewalDateMonthly').value = sgiData.renewalDate;
       } else {
         document.getElementById('sgiTypeAnnual').checked = true;
         document.getElementById('sgiAnnualAmount').value = sgiData.amount;
@@ -3725,6 +3736,7 @@
     var type = monthly ? 'monthly' : 'annual';
     var amount = monthly ? document.getElementById('sgiMonthlyAmount').value : document.getElementById('sgiAnnualAmount').value;
     var date = monthly ? document.getElementById('sgiNextDebit').value : document.getElementById('sgiRenewalDate').value;
+    var renewalDate = monthly ? document.getElementById('sgiRenewalDateMonthly').value : '';
 
     var saveBtn = e.target.querySelector('.btn-save');
     saveBtn.disabled = true;
@@ -3733,7 +3745,8 @@
     Promise.all([
       apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegType', value: type }),
       apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegAmount', value: amount || '' }),
-      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegDate', value: date || '' })
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegDate', value: date || '' }),
+      apiPost('updateSetting', { vehicleId: VEHICLE_ID, key: 'RegRenewalDate', value: renewalDate || '' })
     ]).then(function (results) {
       if (results.every(function (r) { return r.ok; })) {
         showToast('Registration info saved');
@@ -3767,10 +3780,25 @@
     var label = sgiData.type === 'monthly' ? 'Monthly PAD' : 'Annual (paid in full)';
     headline.innerHTML = label + ' &middot; ' + fmtMoney(sgiData.amount) + (sgiData.type === 'monthly' ? ' / mo' : ' / yr');
     autopayBadge.style.display = sgiData.type === 'monthly' ? 'inline-flex' : 'none';
-    var dueDate = new Date(sgiData.date + 'T00:00:00');
+
+    // For monthly PAD, the plate's actual expiry risk tracks the annual
+    // renewal date, not the next debit date — a missed debit just retries,
+    // a missed renewal means the plate has lapsed. So the status pill
+    // (overdue/soon/ok) is driven off renewalDate when one is on file;
+    // the debit date is still shown, just informational. Annual vehicles
+    // are unaffected — they only ever had one date.
+    var pillDate = (sgiData.type === 'monthly' && sgiData.renewalDate) ? sgiData.renewalDate : sgiData.date;
+    var dueDate = new Date(pillDate + 'T00:00:00');
     var daysLeft = Math.round((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    var dueLabel = (sgiData.type === 'monthly' ? 'Next debit: ' : 'Renews: ') + formatDateShort(sgiData.date);
-    sub.textContent = dueLabel + (daysLeft >= 0 ? ' (' + daysLeft + ' days)' : ' (' + Math.abs(daysLeft) + ' days overdue)');
+
+    var daysSuffix = daysLeft >= 0 ? ' (' + daysLeft + ' days)' : ' (' + Math.abs(daysLeft) + ' days overdue)';
+    if (sgiData.type === 'monthly') {
+      var debitLabel = 'Next debit: ' + formatDateShort(sgiData.date);
+      var renewalLabel = sgiData.renewalDate ? 'Renews: ' + formatDateShort(sgiData.renewalDate) + daysSuffix : 'Renewal date not set';
+      sub.innerHTML = debitLabel + ' &middot; ' + renewalLabel;
+    } else {
+      sub.textContent = 'Renews: ' + formatDateShort(sgiData.date) + daysSuffix;
+    }
     if (daysLeft < 0) { pill.className = 'status-pill overdue'; pill.textContent = 'Overdue'; }
     else if (daysLeft <= 30) { pill.className = 'status-pill soon'; pill.textContent = 'Due soon'; }
     else { pill.className = 'status-pill ok'; pill.textContent = 'On track'; }
